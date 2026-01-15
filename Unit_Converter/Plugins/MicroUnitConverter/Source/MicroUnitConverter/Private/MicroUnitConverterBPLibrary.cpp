@@ -55,6 +55,22 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Time(double InValue, ETimeUni
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
+double UMicroUnitConverterBPLibrary::ConvertUnit_Data(double InValue, EDataUnit InUnit, EDataUnit OutUnit)
+{
+	double InRatio = DataRatios[InUnit];
+	double OutRatio = DataRatios[OutUnit];
+
+	return InValue * (InRatio / OutRatio);
+}
+
+void UMicroUnitConverterBPLibrary::PrintConversion_Data(double InValue, EDataUnit InUnit, EDataUnit OutUnit, FPrintOptions PrintOptions)
+{
+	double ConvertedValue = ConvertUnit_Data(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = DataSuffix[OutUnit];
+
+	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
+}
+
 void UMicroUnitConverterBPLibrary::PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions)
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
