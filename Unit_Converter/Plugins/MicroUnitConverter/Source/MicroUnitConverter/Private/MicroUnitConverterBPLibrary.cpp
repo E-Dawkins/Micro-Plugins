@@ -39,6 +39,22 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Weight(double InValue, EWeigh
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
+double UMicroUnitConverterBPLibrary::ConvertUnit_Time(double InValue, ETimeUnit InUnit, ETimeUnit OutUnit)
+{
+	double InRatio = TimeRatios[InUnit];
+	double OutRatio = TimeRatios[OutUnit];
+
+	return InValue * (InRatio / OutRatio);
+}
+
+void UMicroUnitConverterBPLibrary::PrintConversion_Time(double InValue, ETimeUnit InUnit, ETimeUnit OutUnit, FPrintOptions PrintOptions)
+{
+	double ConvertedValue = ConvertUnit_Time(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = TimeSuffix[OutUnit];
+
+	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
+}
+
 void UMicroUnitConverterBPLibrary::PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions)
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)

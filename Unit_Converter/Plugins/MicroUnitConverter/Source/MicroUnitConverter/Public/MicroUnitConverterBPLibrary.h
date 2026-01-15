@@ -49,6 +49,20 @@ enum class EWeightUnit : uint8
 	EWU_Stones			UMETA(DisplayName = "Stones"),
 };
 
+UENUM(BlueprintType)
+enum class ETimeUnit : uint8
+{
+	ETU_Nanoseconds		UMETA(DisplayName = "Nanoseconds"),
+	ETU_Microseconds	UMETA(DisplayName = "Microseconds"),
+	ETU_Milliseconds	UMETA(DisplayName = "Milliseconds"),
+	ETU_Seconds			UMETA(DisplayName = "Seconds"),
+	ETU_Minutes			UMETA(DisplayName = "Minutes"),
+	ETU_Hours			UMETA(DisplayName = "Hours"),
+	ETU_Days			UMETA(DisplayName = "Days"),
+	ETU_Months			UMETA(DisplayName = "Months"),
+	ETU_Years			UMETA(DisplayName = "Years"),
+};
+
 UCLASS()
 class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -69,6 +83,14 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	// Prints the converted weight value to screen / output log
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Weight", DevelopmentOnly))
 	static void PrintConversion_Weight(double InValue, EWeightUnit InUnit, EWeightUnit OutUnit, FPrintOptions PrintOptions);
+
+	// Converts value from one time unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Time"))
+	static double ConvertUnit_Time(double InValue, ETimeUnit InUnit, ETimeUnit OutUnit);
+
+	// Prints the converted time value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Time", DevelopmentOnly))
+	static void PrintConversion_Time(double InValue, ETimeUnit InUnit, ETimeUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -128,6 +150,33 @@ private:
 		{ EWeightUnit::EWU_Ounces,			"oz" },
 		{ EWeightUnit::EWU_Pounds,			"lb" },
 		{ EWeightUnit::EWU_Stones,			"st" },
+	};
+
+	// These ratios are measured in seconds, i.e. 1ms = 0.001s
+	inline static const TMap<ETimeUnit, double> TimeRatios =
+	{
+		{ ETimeUnit::ETU_Nanoseconds,		0.000000001 },
+		{ ETimeUnit::ETU_Microseconds,		0.000001 },
+		{ ETimeUnit::ETU_Milliseconds,		0.001 },
+		{ ETimeUnit::ETU_Seconds,			1.0 },
+		{ ETimeUnit::ETU_Minutes,			60.0 },
+		{ ETimeUnit::ETU_Hours,				3600.0 },
+		{ ETimeUnit::ETU_Days,				86400.0 },
+		{ ETimeUnit::ETU_Months,			2628000.0 },	// ~30.4167 days (365 days/12 months)
+		{ ETimeUnit::ETU_Years,				31536000.0 },	// 365 days
+	};
+
+	inline static const TMap<ETimeUnit, FString> TimeSuffix =
+	{
+		{ ETimeUnit::ETU_Nanoseconds,		"ns" },
+		{ ETimeUnit::ETU_Microseconds,		"µs" },
+		{ ETimeUnit::ETU_Milliseconds,		"ms" },
+		{ ETimeUnit::ETU_Seconds,			"s" },
+		{ ETimeUnit::ETU_Minutes,			"min" },
+		{ ETimeUnit::ETU_Hours,				"h" },
+		{ ETimeUnit::ETU_Days,				"d" },
+		{ ETimeUnit::ETU_Months,			"mo" },
+		{ ETimeUnit::ETU_Years,				"yr" },
 	};
 	
 };
