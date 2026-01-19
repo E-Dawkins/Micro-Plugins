@@ -64,26 +64,26 @@ enum class ETimeUnit : uint8
 };
 
 UENUM(BlueprintType)
-enum class EDataUnit : uint8
+enum class EBinaryUnit : uint8
 {
-	EDU_Bits			UMETA(DisplayName = "Bits"),
-	EDU_Bytes			UMETA(DisplayName = "Bytes"),
-	EDU_Kilobits		UMETA(DisplayName = "Kilobits"),
-	EDU_Kibibits		UMETA(DisplayName = "Kibibits"),
-	EDU_Kilobytes		UMETA(DisplayName = "Kilobytes"),
-	EDU_Kibibytes		UMETA(DisplayName = "Kibibytes"),
-	EDU_Megabits		UMETA(DisplayName = "Megabits"),
-	EDU_Mebibits		UMETA(DisplayName = "Mebibits"),
-	EDU_Megabytes		UMETA(DisplayName = "Megabytes"),
-	EDU_Mebibytes		UMETA(DisplayName = "Mebibytes"),
-	EDU_Gigabits		UMETA(DisplayName = "Gigabits"),
-	EDU_Gibibits		UMETA(DisplayName = "Gibibits"),
-	EDU_Gigabytes		UMETA(DisplayName = "Gigabytes"),
-	EDU_Gibibytes		UMETA(DisplayName = "Gibibytes"),
-	EDU_Terabits		UMETA(DisplayName = "Terabits"),
-	EDU_Tebibits		UMETA(DisplayName = "Tebibits"),
-	EDU_Terabytes		UMETA(DisplayName = "Terabytes"),
-	EDU_Tebibytes		UMETA(DisplayName = "Tebibytes"),
+	EBU_Bits			UMETA(DisplayName = "Bits"),
+	EBU_Bytes			UMETA(DisplayName = "Bytes"),
+	EBU_Kilobits		UMETA(DisplayName = "Kilobits"),
+	EBU_Kibibits		UMETA(DisplayName = "Kibibits"),
+	EBU_Kilobytes		UMETA(DisplayName = "Kilobytes"),
+	EBU_Kibibytes		UMETA(DisplayName = "Kibibytes"),
+	EBU_Megabits		UMETA(DisplayName = "Megabits"),
+	EBU_Mebibits		UMETA(DisplayName = "Mebibits"),
+	EBU_Megabytes		UMETA(DisplayName = "Megabytes"),
+	EBU_Mebibytes		UMETA(DisplayName = "Mebibytes"),
+	EBU_Gigabits		UMETA(DisplayName = "Gigabits"),
+	EBU_Gibibits		UMETA(DisplayName = "Gibibits"),
+	EBU_Gigabytes		UMETA(DisplayName = "Gigabytes"),
+	EBU_Gibibytes		UMETA(DisplayName = "Gibibytes"),
+	EBU_Terabits		UMETA(DisplayName = "Terabits"),
+	EBU_Tebibits		UMETA(DisplayName = "Tebibits"),
+	EBU_Terabytes		UMETA(DisplayName = "Terabytes"),
+	EBU_Tebibytes		UMETA(DisplayName = "Tebibytes"),
 };
 
 UCLASS()
@@ -115,13 +115,13 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Time", DevelopmentOnly))
 	static void PrintConversion_Time(double InValue, ETimeUnit InUnit, ETimeUnit OutUnit, FPrintOptions PrintOptions);
 
-	// Converts value from one data unit to another using the appropriate ratio
-	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Data"))
-	static double ConvertUnit_Data(double InValue, EDataUnit InUnit, EDataUnit OutUnit);
+	// Converts value from one binary unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Binary"))
+	static double ConvertUnit_Binary(double InValue, EBinaryUnit InUnit, EBinaryUnit OutUnit);
 
-	// Prints the converted data value to screen / output log
-	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Data", DevelopmentOnly))
-	static void PrintConversion_Data(double InValue, EDataUnit InUnit, EDataUnit OutUnit, FPrintOptions PrintOptions);
+	// Prints the converted binary value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Binary", DevelopmentOnly))
+	static void PrintConversion_Binary(double InValue, EBinaryUnit InUnit, EBinaryUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -211,48 +211,48 @@ private:
 	};
 
 	// These ratios are measured in kilobytes, i.e. 1MB = 1000KB
-	inline static const TMap<EDataUnit, double> DataRatios =
+	inline static const TMap<EBinaryUnit, double> BinaryRatios =
 	{
-		{ EDataUnit::EDU_Bits,				0.000125 },
-		{ EDataUnit::EDU_Bytes,				0.001 },
-		{ EDataUnit::EDU_Kilobits,			0.125 },
-		{ EDataUnit::EDU_Kibibits,			0.128 },
-		{ EDataUnit::EDU_Kilobytes,			1.0 },
-		{ EDataUnit::EDU_Kibibytes,			1.024 },
-		{ EDataUnit::EDU_Megabits,			125.0 },
-		{ EDataUnit::EDU_Mebibits,			131.072 },
-		{ EDataUnit::EDU_Megabytes,			1000.0 },
-		{ EDataUnit::EDU_Mebibytes,			1048.576 },
-		{ EDataUnit::EDU_Gigabits,			125000.0 },
-		{ EDataUnit::EDU_Gibibits,			134217.728 },
-		{ EDataUnit::EDU_Gigabytes,			1000000.0 },
-		{ EDataUnit::EDU_Gibibytes,			1073741.824 },
-		{ EDataUnit::EDU_Terabits,			125000000.0 },
-		{ EDataUnit::EDU_Tebibits,			137438953.472 },
-		{ EDataUnit::EDU_Terabytes,			1000000000.0 },
-		{ EDataUnit::EDU_Tebibytes,			1099511627.776 },
+		{ EBinaryUnit::EBU_Bits,				0.000125 },
+		{ EBinaryUnit::EBU_Bytes,				0.001 },
+		{ EBinaryUnit::EBU_Kilobits,			0.125 },
+		{ EBinaryUnit::EBU_Kibibits,			0.128 },
+		{ EBinaryUnit::EBU_Kilobytes,			1.0 },
+		{ EBinaryUnit::EBU_Kibibytes,			1.024 },
+		{ EBinaryUnit::EBU_Megabits,			125.0 },
+		{ EBinaryUnit::EBU_Mebibits,			131.072 },
+		{ EBinaryUnit::EBU_Megabytes,			1000.0 },
+		{ EBinaryUnit::EBU_Mebibytes,			1048.576 },
+		{ EBinaryUnit::EBU_Gigabits,			125000.0 },
+		{ EBinaryUnit::EBU_Gibibits,			134217.728 },
+		{ EBinaryUnit::EBU_Gigabytes,			1000000.0 },
+		{ EBinaryUnit::EBU_Gibibytes,			1073741.824 },
+		{ EBinaryUnit::EBU_Terabits,			125000000.0 },
+		{ EBinaryUnit::EBU_Tebibits,			137438953.472 },
+		{ EBinaryUnit::EBU_Terabytes,			1000000000.0 },
+		{ EBinaryUnit::EBU_Tebibytes,			1099511627.776 },
 	};
 
-	inline static const TMap<EDataUnit, FString> DataSuffix =
+	inline static const TMap<EBinaryUnit, FString> BinarySuffix =
 	{
-		{ EDataUnit::EDU_Bits,				"b" },
-		{ EDataUnit::EDU_Bytes,				"B" },
-		{ EDataUnit::EDU_Kilobits,			"Kb" },
-		{ EDataUnit::EDU_Kibibits,			"Kib" },
-		{ EDataUnit::EDU_Kilobytes,			"KB" },
-		{ EDataUnit::EDU_Kibibytes,			"KiB" },
-		{ EDataUnit::EDU_Megabits,			"Mb" },
-		{ EDataUnit::EDU_Mebibits,			"Mib" },
-		{ EDataUnit::EDU_Megabytes,			"MB" },
-		{ EDataUnit::EDU_Mebibytes,			"MiB" },
-		{ EDataUnit::EDU_Gigabits,			"Gb" },
-		{ EDataUnit::EDU_Gibibits,			"Gib" },
-		{ EDataUnit::EDU_Gigabytes,			"GB" },
-		{ EDataUnit::EDU_Gibibytes,			"GiB" },
-		{ EDataUnit::EDU_Terabits,			"Tb" },
-		{ EDataUnit::EDU_Tebibits,			"Tib" },
-		{ EDataUnit::EDU_Terabytes,			"TB" },
-		{ EDataUnit::EDU_Tebibytes,			"TiB" },
+		{ EBinaryUnit::EBU_Bits,				"b" },
+		{ EBinaryUnit::EBU_Bytes,				"B" },
+		{ EBinaryUnit::EBU_Kilobits,			"Kb" },
+		{ EBinaryUnit::EBU_Kibibits,			"Kib" },
+		{ EBinaryUnit::EBU_Kilobytes,			"KB" },
+		{ EBinaryUnit::EBU_Kibibytes,			"KiB" },
+		{ EBinaryUnit::EBU_Megabits,			"Mb" },
+		{ EBinaryUnit::EBU_Mebibits,			"Mib" },
+		{ EBinaryUnit::EBU_Megabytes,			"MB" },
+		{ EBinaryUnit::EBU_Mebibytes,			"MiB" },
+		{ EBinaryUnit::EBU_Gigabits,			"Gb" },
+		{ EBinaryUnit::EBU_Gibibits,			"Gib" },
+		{ EBinaryUnit::EBU_Gigabytes,			"GB" },
+		{ EBinaryUnit::EBU_Gibibytes,			"GiB" },
+		{ EBinaryUnit::EBU_Terabits,			"Tb" },
+		{ EBinaryUnit::EBU_Tebibits,			"Tib" },
+		{ EBinaryUnit::EBU_Terabytes,			"TB" },
+		{ EBinaryUnit::EBU_Tebibytes,			"TiB" },
 	};
 	
 };

@@ -55,18 +55,18 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Time(double InValue, ETimeUni
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
-double UMicroUnitConverterBPLibrary::ConvertUnit_Data(double InValue, EDataUnit InUnit, EDataUnit OutUnit)
+double UMicroUnitConverterBPLibrary::ConvertUnit_Binary(double InValue, EBinaryUnit InUnit, EBinaryUnit OutUnit)
 {
-	double InRatio = DataRatios[InUnit];
-	double OutRatio = DataRatios[OutUnit];
+	double InRatio = BinaryRatios[InUnit];
+	double OutRatio = BinaryRatios[OutUnit];
 
 	return InValue * (InRatio / OutRatio);
 }
 
-void UMicroUnitConverterBPLibrary::PrintConversion_Data(double InValue, EDataUnit InUnit, EDataUnit OutUnit, FPrintOptions PrintOptions)
+void UMicroUnitConverterBPLibrary::PrintConversion_Binary(double InValue, EBinaryUnit InUnit, EBinaryUnit OutUnit, FPrintOptions PrintOptions)
 {
-	double ConvertedValue = ConvertUnit_Data(InValue, InUnit, OutUnit);
-	FString OutUnitSuffix = DataSuffix[OutUnit];
+	double ConvertedValue = ConvertUnit_Binary(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = BinarySuffix[OutUnit];
 
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
