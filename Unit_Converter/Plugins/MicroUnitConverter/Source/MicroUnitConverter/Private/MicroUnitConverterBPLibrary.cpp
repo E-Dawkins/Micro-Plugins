@@ -71,6 +71,23 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Binary(double InValue, EBinar
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
+double UMicroUnitConverterBPLibrary::ConvertUnit_Temperature(double InValue, ETemperatureUnit InUnit, ETemperatureUnit OutUnit)
+{
+	auto InInfo = TemperatureInfos[InUnit];
+	auto OutInfo = TemperatureInfos[OutUnit];
+
+	double ToF = (InValue * InInfo.Scale) + InInfo.Offset;
+	return (ToF - OutInfo.Offset) / OutInfo.Scale;
+}
+
+void UMicroUnitConverterBPLibrary::PrintConversion_Temperature(double InValue, ETemperatureUnit InUnit, ETemperatureUnit OutUnit, FPrintOptions PrintOptions)
+{
+	double ConvertedValue = ConvertUnit_Temperature(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = TemperatureSuffix[OutUnit];
+
+	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
+}
+
 void UMicroUnitConverterBPLibrary::PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions)
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)

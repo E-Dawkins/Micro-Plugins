@@ -86,6 +86,21 @@ enum class EBinaryUnit : uint8
 	EBU_Tebibytes		UMETA(DisplayName = "Tebibytes"),
 };
 
+UENUM(BlueprintType)
+enum class ETemperatureUnit : uint8
+{
+	ETU_Celsius			UMETA(DisplayName = "Celsius"),
+	ETU_Fahrenheit		UMETA(DisplayName = "Fahrenheit"),
+	ETU_Kelvin			UMETA(DisplayName = "Kelvin"),
+	ETU_Rankine			UMETA(DisplayName = "Rankine"),
+};
+
+struct FTemperatureConversionInfo
+{
+	double Scale = 1.0;
+	double Offset = 0.0;
+};
+
 UCLASS()
 class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -122,6 +137,14 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	// Prints the converted binary value to screen / output log
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Binary", DevelopmentOnly))
 	static void PrintConversion_Binary(double InValue, EBinaryUnit InUnit, EBinaryUnit OutUnit, FPrintOptions PrintOptions);
+
+	// Converts value from one temperature unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Temperature"))
+	static double ConvertUnit_Temperature(double InValue, ETemperatureUnit InUnit, ETemperatureUnit OutUnit);
+
+	// Prints the converted temperature value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Temperature", DevelopmentOnly))
+	static void PrintConversion_Temperature(double InValue, ETemperatureUnit InUnit, ETemperatureUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -253,6 +276,23 @@ private:
 		{ EBinaryUnit::EBU_Tebibits,			"Tib" },
 		{ EBinaryUnit::EBU_Terabytes,			"TB" },
 		{ EBinaryUnit::EBU_Tebibytes,			"TiB" },
+	};
+
+	// These ratios are measured in fahrenheit, i.e. 100°C = 212°F
+	inline static const TMap<ETemperatureUnit, FTemperatureConversionInfo> TemperatureInfos =
+	{
+		{ ETemperatureUnit::ETU_Celsius,		{ 1.8, 32.0 } },
+		{ ETemperatureUnit::ETU_Fahrenheit,		{ 1.0, 0.0 } },
+		{ ETemperatureUnit::ETU_Kelvin,			{ 1.8, -459.67 } },
+		{ ETemperatureUnit::ETU_Rankine,		{ 1.0, -459.67 } },
+	};
+
+	inline static const TMap<ETemperatureUnit, FString> TemperatureSuffix =
+	{
+		{ ETemperatureUnit::ETU_Celsius,		"*C" },
+		{ ETemperatureUnit::ETU_Fahrenheit,		"*F" },
+		{ ETemperatureUnit::ETU_Kelvin,			"*K" },
+		{ ETemperatureUnit::ETU_Rankine,		"*R" },
 	};
 	
 };
