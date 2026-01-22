@@ -88,6 +88,22 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Temperature(double InValue, E
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
+double UMicroUnitConverterBPLibrary::ConvertUnit_Frequency(double InValue, EFrequencyUnit InUnit, EFrequencyUnit OutUnit)
+{
+	double InRatio = FrequencyRatios[InUnit];
+	double OutRatio = FrequencyRatios[OutUnit];
+
+	return InValue * (InRatio / OutRatio);
+}
+
+void UMicroUnitConverterBPLibrary::PrintConversion_Frequency(double InValue, EFrequencyUnit InUnit, EFrequencyUnit OutUnit, FPrintOptions PrintOptions)
+{
+	double ConvertedValue = ConvertUnit_Frequency(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = FrequencySuffix[OutUnit];
+
+	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
+}
+
 void UMicroUnitConverterBPLibrary::PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions)
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)

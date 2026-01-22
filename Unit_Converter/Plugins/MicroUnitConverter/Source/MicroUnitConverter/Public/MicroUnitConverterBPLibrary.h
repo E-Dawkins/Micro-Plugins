@@ -101,6 +101,18 @@ struct FTemperatureConversionInfo
 	double Offset = 0.0;
 };
 
+UENUM(BlueprintType)
+enum class EFrequencyUnit : uint8
+{
+	EFU_Microhertz		UMETA(DisplayName = "Microhertz"),
+	EFU_Millihertz		UMETA(DisplayName = "Millihertz"),
+	EFU_Hertz			UMETA(DisplayName = "Hertz"),
+	EFU_Kilohertz		UMETA(DisplayName = "Kilohertz"),
+	EFU_Megahertz		UMETA(DisplayName = "Megahertz"),
+	EFU_Gigahertz		UMETA(DisplayName = "Gigahertz"),
+	EFU_Rpm				UMETA(DisplayName = "Revolutions Per Minute"),
+};
+
 UCLASS()
 class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -145,6 +157,14 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	// Prints the converted temperature value to screen / output log
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Temperature", DevelopmentOnly))
 	static void PrintConversion_Temperature(double InValue, ETemperatureUnit InUnit, ETemperatureUnit OutUnit, FPrintOptions PrintOptions);
+
+	// Converts value from one frequency unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Frequency"))
+	static double ConvertUnit_Frequency(double InValue, EFrequencyUnit InUnit, EFrequencyUnit OutUnit);
+
+	// Prints the converted frequency value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Frequency", DevelopmentOnly))
+	static void PrintConversion_Frequency(double InValue, EFrequencyUnit InUnit, EFrequencyUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -293,6 +313,29 @@ private:
 		{ ETemperatureUnit::ETU_Fahrenheit,		"*F" },
 		{ ETemperatureUnit::ETU_Kelvin,			"*K" },
 		{ ETemperatureUnit::ETU_Rankine,		"*R" },
+	};
+
+	// These ratios are measured in kilohertz, i.e. 1MHz = 1000KHz
+	inline static const TMap<EFrequencyUnit, double> FrequencyRatios =
+	{
+		{ EFrequencyUnit::EFU_Microhertz,		0.000000001 },
+		{ EFrequencyUnit::EFU_Millihertz,		0.000001 },
+		{ EFrequencyUnit::EFU_Hertz,			0.001 },
+		{ EFrequencyUnit::EFU_Kilohertz,		1.0 },
+		{ EFrequencyUnit::EFU_Megahertz,		1000.0 },
+		{ EFrequencyUnit::EFU_Gigahertz,		1000000.0 },
+		{ EFrequencyUnit::EFU_Rpm,				0.001/60.0 },
+	};
+
+	inline static const TMap<EFrequencyUnit, FString> FrequencySuffix =
+	{
+		{ EFrequencyUnit::EFU_Microhertz,		"µHz" },
+		{ EFrequencyUnit::EFU_Millihertz,		"mHz" },
+		{ EFrequencyUnit::EFU_Hertz,			"Hz" },
+		{ EFrequencyUnit::EFU_Kilohertz,		"kHz" },
+		{ EFrequencyUnit::EFU_Megahertz,		"MHz" },
+		{ EFrequencyUnit::EFU_Gigahertz,		"GHz" },
+		{ EFrequencyUnit::EFU_Rpm,				"rpm" },
 	};
 	
 };
