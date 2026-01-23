@@ -104,6 +104,22 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Frequency(double InValue, EFr
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
+double UMicroUnitConverterBPLibrary::ConvertUnit_Force(double InValue, EForceUnit InUnit, EForceUnit OutUnit)
+{
+	double InRatio = ForceRatios[InUnit];
+	double OutRatio = ForceRatios[OutUnit];
+
+	return InValue * (InRatio / OutRatio);
+}
+
+void UMicroUnitConverterBPLibrary::PrintConversion_Force(double InValue, EForceUnit InUnit, EForceUnit OutUnit, FPrintOptions PrintOptions)
+{
+	double ConvertedValue = ConvertUnit_Force(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = ForceSuffix[OutUnit];
+
+	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
+}
+
 void UMicroUnitConverterBPLibrary::PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions)
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)

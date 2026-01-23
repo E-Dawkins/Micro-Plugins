@@ -113,6 +113,16 @@ enum class EFrequencyUnit : uint8
 	EFU_Rpm				UMETA(DisplayName = "Revolutions Per Minute"),
 };
 
+UENUM(BlueprintType)
+enum class EForceUnit : uint8
+{
+	EFU_Newtons			UMETA(DisplayName = "Newtons"),
+	EFU_Kilonewtons		UMETA(DisplayName = "Kilonewtons"),
+	EFU_PoundsForce		UMETA(DisplayName = "Pounds Force"),
+	EFU_GramsForce		UMETA(DisplayName = "Grams Force"),
+	EFU_KilogramsForce	UMETA(DisplayName = "Kilograms Force"),
+};
+
 UCLASS()
 class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -165,6 +175,14 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	// Prints the converted frequency value to screen / output log
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Frequency", DevelopmentOnly))
 	static void PrintConversion_Frequency(double InValue, EFrequencyUnit InUnit, EFrequencyUnit OutUnit, FPrintOptions PrintOptions);
+
+	// Converts value from one force unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Force"))
+	static double ConvertUnit_Force(double InValue, EForceUnit InUnit, EForceUnit OutUnit);
+
+	// Prints the converted force value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Force", DevelopmentOnly))
+	static void PrintConversion_Force(double InValue, EForceUnit InUnit, EForceUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -336,6 +354,25 @@ private:
 		{ EFrequencyUnit::EFU_Megahertz,		"MHz" },
 		{ EFrequencyUnit::EFU_Gigahertz,		"GHz" },
 		{ EFrequencyUnit::EFU_Rpm,				"rpm" },
+	};
+
+	// These ratios are measured in Newtons, i.e. 1kN = 1000N
+	inline static const TMap<EForceUnit, double> ForceRatios =
+	{
+		{ EForceUnit::EFU_Newtons,				1.0 },
+		{ EForceUnit::EFU_Kilonewtons,			1000.0 },
+		{ EForceUnit::EFU_PoundsForce,			4.4482216152605 },
+		{ EForceUnit::EFU_GramsForce,			0.00980665 },
+		{ EForceUnit::EFU_KilogramsForce,		9.80665 },
+	};
+
+	inline static const TMap<EForceUnit, FString> ForceSuffix =
+	{
+		{ EForceUnit::EFU_Newtons,				"N" },
+		{ EForceUnit::EFU_Kilonewtons,			"kN" },
+		{ EForceUnit::EFU_PoundsForce,			"lbf" },
+		{ EForceUnit::EFU_GramsForce,			"gf" },
+		{ EForceUnit::EFU_KilogramsForce,		"kgf" },
 	};
 	
 };
