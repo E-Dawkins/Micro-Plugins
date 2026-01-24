@@ -123,6 +123,20 @@ enum class EForceUnit : uint8
 	EFU_KilogramsForce	UMETA(DisplayName = "Kilograms Force"),
 };
 
+UENUM(BlueprintType)
+enum class EPressureUnit : uint8
+{
+	EPU_Pascals					UMETA(DisplayName = "Pascals"),
+	EPU_Kilopascals				UMETA(DisplayName = "Kilopascals"),
+	EPU_Megapascals				UMETA(DisplayName = "Megapascals"),
+	EPU_Gigapascals				UMETA(DisplayName = "Gigapascals"),
+	EPU_Bar						UMETA(DisplayName = "Bar"),
+	EPU_StandardAtmosphere		UMETA(DisplayName = "Standard Atmosphere"),
+	EPU_TechnicalAtmosphere		UMETA(DisplayName = "Technical Atmosphere"),
+	EPU_PoundsPerSquareInch		UMETA(DisplayName = "Pounds Per Square Inch"),
+	EPU_MillimetersOfMercury	UMETA(DisplayName = "Millimeters Of Mercury"),
+};
+
 UCLASS()
 class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -183,6 +197,14 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	// Prints the converted force value to screen / output log
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Force", DevelopmentOnly))
 	static void PrintConversion_Force(double InValue, EForceUnit InUnit, EForceUnit OutUnit, FPrintOptions PrintOptions);
+
+	// Converts value from one pressure unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Pressure"))
+	static double ConvertUnit_Pressure(double InValue, EPressureUnit InUnit, EPressureUnit OutUnit);
+
+	// Prints the converted pressure value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Pressure", DevelopmentOnly))
+	static void PrintConversion_Pressure(double InValue, EPressureUnit InUnit, EPressureUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -373,6 +395,33 @@ private:
 		{ EForceUnit::EFU_PoundsForce,			"lbf" },
 		{ EForceUnit::EFU_GramsForce,			"gf" },
 		{ EForceUnit::EFU_KilogramsForce,		"kgf" },
+	};
+
+	// These ratios are measured in kilopascals, i.e. 1MPa = 1000KPa
+	inline static const TMap<EPressureUnit, double> PressureRatios =
+	{
+		{ EPressureUnit::EPU_Pascals,					0.001 },
+		{ EPressureUnit::EPU_Kilopascals,				1.0 },
+		{ EPressureUnit::EPU_Megapascals,				1000.0 },
+		{ EPressureUnit::EPU_Gigapascals,				1000000.0 },
+		{ EPressureUnit::EPU_Bar,						100.0 },
+		{ EPressureUnit::EPU_StandardAtmosphere,		101.325 },
+		{ EPressureUnit::EPU_TechnicalAtmosphere,		98.0665 },
+		{ EPressureUnit::EPU_PoundsPerSquareInch,		6.8947572932 },
+		{ EPressureUnit::EPU_MillimetersOfMercury,		0.1333223684 },
+	};
+
+	inline static const TMap<EPressureUnit, FString> PressureSuffix =
+	{
+		{ EPressureUnit::EPU_Pascals,					"Pa" },
+		{ EPressureUnit::EPU_Kilopascals,				"kPa" },
+		{ EPressureUnit::EPU_Megapascals,				"MPa" },
+		{ EPressureUnit::EPU_Gigapascals,				"GPa" },
+		{ EPressureUnit::EPU_Bar,						"bar" },
+		{ EPressureUnit::EPU_StandardAtmosphere,		"atm" },
+		{ EPressureUnit::EPU_TechnicalAtmosphere,		"at" },
+		{ EPressureUnit::EPU_PoundsPerSquareInch,		"psi" },
+		{ EPressureUnit::EPU_MillimetersOfMercury,		"mmHg" },
 	};
 	
 };

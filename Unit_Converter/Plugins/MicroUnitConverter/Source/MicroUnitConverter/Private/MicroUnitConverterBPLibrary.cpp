@@ -120,6 +120,22 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Force(double InValue, EForceU
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
+double UMicroUnitConverterBPLibrary::ConvertUnit_Pressure(double InValue, EPressureUnit InUnit, EPressureUnit OutUnit)
+{
+	double InRatio = PressureRatios[InUnit];
+	double OutRatio = PressureRatios[OutUnit];
+
+	return InValue * (InRatio / OutRatio);
+}
+
+void UMicroUnitConverterBPLibrary::PrintConversion_Pressure(double InValue, EPressureUnit InUnit, EPressureUnit OutUnit, FPrintOptions PrintOptions)
+{
+	double ConvertedValue = ConvertUnit_Pressure(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = PressureSuffix[OutUnit];
+
+	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
+}
+
 void UMicroUnitConverterBPLibrary::PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions)
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
