@@ -137,6 +137,19 @@ enum class EPressureUnit : uint8
 	EPU_MillimetersOfMercury	UMETA(DisplayName = "Millimeters Of Mercury"),
 };
 
+UENUM(BlueprintType)
+enum class EDensityUnit : uint8
+{
+	EDU_GramsPerCubicCentimeter			UMETA(DisplayName = "Grams Per Cubic Centimeter"),
+	EDU_GramsPerCubicMeter				UMETA(DisplayName = "Grams Per Cubic Meter"),
+	EDU_KilogramsPerCubicCentimeter		UMETA(DisplayName = "Kilograms Per Cubic Centimeter"),
+	EDU_KilogramsPerCubicMeter			UMETA(DisplayName = "Kilograms Per Cubic Meter"),
+	EDU_GramsPerLitre					UMETA(DisplayName = "Grams Per Litre"),
+	EDU_KilogramsPerLitre				UMETA(DisplayName = "Kilograms Per Litre"),
+	EDU_PoundsPerCubicInch				UMETA(DisplayName = "Pounds Per Cubic Inch"),
+	EDU_PoundsPerCubicFoot				UMETA(DisplayName = "Pounds Per Cubic Foot"),
+};
+
 UCLASS()
 class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -205,6 +218,14 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	// Prints the converted pressure value to screen / output log
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Pressure", DevelopmentOnly))
 	static void PrintConversion_Pressure(double InValue, EPressureUnit InUnit, EPressureUnit OutUnit, FPrintOptions PrintOptions);
+
+	// Converts value from one density unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Density"))
+	static double ConvertUnit_Density(double InValue, EDensityUnit InUnit, EDensityUnit OutUnit);
+
+	// Prints the converted density value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Density", DevelopmentOnly))
+	static void PrintConversion_Density(double InValue, EDensityUnit InUnit, EDensityUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -422,6 +443,31 @@ private:
 		{ EPressureUnit::EPU_TechnicalAtmosphere,		"at" },
 		{ EPressureUnit::EPU_PoundsPerSquareInch,		"psi" },
 		{ EPressureUnit::EPU_MillimetersOfMercury,		"mmHg" },
+	};
+
+	// These ratios are measured in kg/m, i.e. 1kg/L = 1000kg/m^3
+	inline static const TMap<EDensityUnit, double> DensityRatios =
+	{
+		{ EDensityUnit::EDU_GramsPerCubicCentimeter,		1000.0 },
+		{ EDensityUnit::EDU_GramsPerCubicMeter,				0.001 },
+		{ EDensityUnit::EDU_KilogramsPerCubicCentimeter,	1000000.0 },
+		{ EDensityUnit::EDU_KilogramsPerCubicMeter,			1.0 },
+		{ EDensityUnit::EDU_GramsPerLitre,					1.0 },
+		{ EDensityUnit::EDU_KilogramsPerLitre,				1000.0 },
+		{ EDensityUnit::EDU_PoundsPerCubicInch,				27679.904710203 },
+		{ EDensityUnit::EDU_PoundsPerCubicFoot,				16.01846337396 },
+	};
+
+	inline static const TMap<EDensityUnit, FString> DensitySuffix =
+	{
+		{ EDensityUnit::EDU_GramsPerCubicCentimeter,		"g/cm^3" },
+		{ EDensityUnit::EDU_GramsPerCubicMeter,				"g/m^3" },
+		{ EDensityUnit::EDU_KilogramsPerCubicCentimeter,	"kg/cm^3" },
+		{ EDensityUnit::EDU_KilogramsPerCubicMeter,			"kg/m^3" },
+		{ EDensityUnit::EDU_GramsPerLitre,					"g/L" },
+		{ EDensityUnit::EDU_KilogramsPerLitre,				"kg/L" },
+		{ EDensityUnit::EDU_PoundsPerCubicInch,				"lb/in^3" },
+		{ EDensityUnit::EDU_PoundsPerCubicFoot,				"lb/ft^3" },
 	};
 	
 };
