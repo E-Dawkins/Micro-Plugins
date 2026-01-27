@@ -104,13 +104,15 @@ struct FTemperatureConversionInfo
 UENUM(BlueprintType)
 enum class EFrequencyUnit : uint8
 {
-	EFU_Microhertz		UMETA(DisplayName = "Microhertz"),
-	EFU_Millihertz		UMETA(DisplayName = "Millihertz"),
-	EFU_Hertz			UMETA(DisplayName = "Hertz"),
-	EFU_Kilohertz		UMETA(DisplayName = "Kilohertz"),
-	EFU_Megahertz		UMETA(DisplayName = "Megahertz"),
-	EFU_Gigahertz		UMETA(DisplayName = "Gigahertz"),
-	EFU_Rpm				UMETA(DisplayName = "Revolutions Per Minute"),
+	EFU_Microhertz			UMETA(DisplayName = "Microhertz"),
+	EFU_Millihertz			UMETA(DisplayName = "Millihertz"),
+	EFU_Hertz				UMETA(DisplayName = "Hertz"),
+	EFU_Kilohertz			UMETA(DisplayName = "Kilohertz"),
+	EFU_Megahertz			UMETA(DisplayName = "Megahertz"),
+	EFU_Gigahertz			UMETA(DisplayName = "Gigahertz"),
+	EFU_Rpm					UMETA(DisplayName = "Revolutions Per Minute"),
+	EFU_DegreesPerSecond	UMETA(DisplayName = "Degrees Per Second"),
+	EFU_RadiansPerSecond	UMETA(DisplayName = "Radians Per Second"),
 };
 
 UENUM(BlueprintType)
@@ -401,24 +403,28 @@ private:
 	// These ratios are measured in kilohertz, i.e. 1MHz = 1000KHz
 	inline static const TMap<EFrequencyUnit, double> FrequencyRatios =
 	{
-		{ EFrequencyUnit::EFU_Microhertz,		0.000000001 },
-		{ EFrequencyUnit::EFU_Millihertz,		0.000001 },
-		{ EFrequencyUnit::EFU_Hertz,			0.001 },
-		{ EFrequencyUnit::EFU_Kilohertz,		1.0 },
-		{ EFrequencyUnit::EFU_Megahertz,		1000.0 },
-		{ EFrequencyUnit::EFU_Gigahertz,		1000000.0 },
-		{ EFrequencyUnit::EFU_Rpm,				0.001/60.0 },
+		{ EFrequencyUnit::EFU_Microhertz,			0.000000001 },
+		{ EFrequencyUnit::EFU_Millihertz,			0.000001 },
+		{ EFrequencyUnit::EFU_Hertz,				0.001 },
+		{ EFrequencyUnit::EFU_Kilohertz,			1.0 },
+		{ EFrequencyUnit::EFU_Megahertz,			1000.0 },
+		{ EFrequencyUnit::EFU_Gigahertz,			1000000.0 },
+		{ EFrequencyUnit::EFU_Rpm,					0.001 / 60.0 },
+		{ EFrequencyUnit::EFU_DegreesPerSecond,		1.0 / 360000.0 },
+		{ EFrequencyUnit::EFU_RadiansPerSecond,		1.0 / (2000.0 * DOUBLE_PI)},
 	};
 
 	inline static const TMap<EFrequencyUnit, FString> FrequencySuffix =
 	{
-		{ EFrequencyUnit::EFU_Microhertz,		"µHz" },
-		{ EFrequencyUnit::EFU_Millihertz,		"mHz" },
-		{ EFrequencyUnit::EFU_Hertz,			"Hz" },
-		{ EFrequencyUnit::EFU_Kilohertz,		"kHz" },
-		{ EFrequencyUnit::EFU_Megahertz,		"MHz" },
-		{ EFrequencyUnit::EFU_Gigahertz,		"GHz" },
-		{ EFrequencyUnit::EFU_Rpm,				"rpm" },
+		{ EFrequencyUnit::EFU_Microhertz,			"µHz" },
+		{ EFrequencyUnit::EFU_Millihertz,			"mHz" },
+		{ EFrequencyUnit::EFU_Hertz,				"Hz" },
+		{ EFrequencyUnit::EFU_Kilohertz,			"kHz" },
+		{ EFrequencyUnit::EFU_Megahertz,			"MHz" },
+		{ EFrequencyUnit::EFU_Gigahertz,			"GHz" },
+		{ EFrequencyUnit::EFU_Rpm,					"rpm" },
+		{ EFrequencyUnit::EFU_DegreesPerSecond,		"deg/s" },
+		{ EFrequencyUnit::EFU_RadiansPerSecond,		"rad/s" },
 	};
 
 	// These ratios are measured in Newtons, i.e. 1kN = 1000N
