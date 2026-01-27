@@ -152,6 +152,22 @@ void UMicroUnitConverterBPLibrary::PrintConversion_Density(double InValue, EDens
 	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
 }
 
+double UMicroUnitConverterBPLibrary::ConvertUnit_Speed(double InValue, ESpeedUnit InUnit, ESpeedUnit OutUnit)
+{
+	double InRatio = SpeedRatios[InUnit];
+	double OutRatio = SpeedRatios[OutUnit];
+
+	return InValue * (InRatio / OutRatio);
+}
+
+void UMicroUnitConverterBPLibrary::PrintConversion_Speed(double InValue, ESpeedUnit InUnit, ESpeedUnit OutUnit, FPrintOptions PrintOptions)
+{
+	double ConvertedValue = ConvertUnit_Speed(InValue, InUnit, OutUnit);
+	FString OutUnitSuffix = SpeedSuffix[OutUnit];
+
+	PrintImpl(ConvertedValue, OutUnitSuffix, PrintOptions);
+}
+
 void UMicroUnitConverterBPLibrary::PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions)
 {
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)

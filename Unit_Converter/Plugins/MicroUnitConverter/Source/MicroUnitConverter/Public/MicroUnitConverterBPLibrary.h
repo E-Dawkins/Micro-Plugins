@@ -150,6 +150,20 @@ enum class EDensityUnit : uint8
 	EDU_PoundsPerCubicFoot				UMETA(DisplayName = "Pounds Per Cubic Foot"),
 };
 
+UENUM(BlueprintType)
+enum class ESpeedUnit : uint8
+{
+	ESU_CentimetersPerSecond	UMETA(DisplayName = "Centimeters Per Second"),
+	ESU_MetersPerSecond			UMETA(DisplayName = "Meters Per Second"),
+	ESU_KilometersPerHour		UMETA(DisplayName = "Kilometers Per Hour"),
+	ESU_InchesPerSecond			UMETA(DisplayName = "Inches Per Second"),
+	ESU_FeetPerSecond			UMETA(DisplayName = "Feet Per Second"),
+	ESU_MilesPerHour			UMETA(DisplayName = "Miles Per Hour"),
+	ESU_Knots					UMETA(DisplayName = "Knots"),
+	ESU_Mach					UMETA(DisplayName = "Mach (SI)"),
+	ESU_MachISA					UMETA(DisplayName = "Mach ISA (20*C, 1atm)"),
+};
+
 UCLASS()
 class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 {
@@ -226,6 +240,14 @@ class UMicroUnitConverterBPLibrary : public UBlueprintFunctionLibrary
 	// Prints the converted density value to screen / output log
 	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Density", DevelopmentOnly))
 	static void PrintConversion_Density(double InValue, EDensityUnit InUnit, EDensityUnit OutUnit, FPrintOptions PrintOptions);
+
+	// Converts value from one speed unit to another using the appropriate ratio
+	UFUNCTION(BlueprintPure, Category = "Micro Unit Converter", meta = (DisplayName = "Convert Unit - Speed"))
+	static double ConvertUnit_Speed(double InValue, ESpeedUnit InUnit, ESpeedUnit OutUnit);
+
+	// Prints the converted speed value to screen / output log
+	UFUNCTION(BlueprintCallable, Category = "Micro Unit Converter", meta = (DisplayName = "Print Conversion - Speed", DevelopmentOnly))
+	static void PrintConversion_Speed(double InValue, ESpeedUnit InUnit, ESpeedUnit OutUnit, FPrintOptions PrintOptions);
 
 private:
 	static void PrintImpl(double ConvertedValue, FString UnitSuffix, FPrintOptions PrintOptions);
@@ -468,6 +490,33 @@ private:
 		{ EDensityUnit::EDU_KilogramsPerLitre,				"kg/L" },
 		{ EDensityUnit::EDU_PoundsPerCubicInch,				"lb/in^3" },
 		{ EDensityUnit::EDU_PoundsPerCubicFoot,				"lb/ft^3" },
+	};
+
+	// These ratios are measured in km/h, i.e. 1cm/s = 0.036km/h
+	inline static const TMap<ESpeedUnit, double> SpeedRatios =
+	{
+		{ ESpeedUnit::ESU_CentimetersPerSecond,		0.036 },
+		{ ESpeedUnit::ESU_MetersPerSecond,			3.6 },
+		{ ESpeedUnit::ESU_KilometersPerHour,		1.0 },
+		{ ESpeedUnit::ESU_InchesPerSecond,			0.09144 },
+		{ ESpeedUnit::ESU_FeetPerSecond,			1.09728 },
+		{ ESpeedUnit::ESU_MilesPerHour,				1.609344 },
+		{ ESpeedUnit::ESU_Knots,					1.852 },
+		{ ESpeedUnit::ESU_Mach,						1062.16704 },
+		{ ESpeedUnit::ESU_MachISA,					1236.96 },
+	};
+
+	inline static const TMap<ESpeedUnit, FString> SpeedSuffix =
+	{
+		{ ESpeedUnit::ESU_CentimetersPerSecond,		"cm/s" },
+		{ ESpeedUnit::ESU_MetersPerSecond,			"m/s" },
+		{ ESpeedUnit::ESU_KilometersPerHour,		"km/h" },
+		{ ESpeedUnit::ESU_InchesPerSecond,			"in/s" },
+		{ ESpeedUnit::ESU_FeetPerSecond,			"ft/s" },
+		{ ESpeedUnit::ESU_MilesPerHour,				"mi/h" },
+		{ ESpeedUnit::ESU_Knots,					"kn" },
+		{ ESpeedUnit::ESU_Mach,						"Ma" },
+		{ ESpeedUnit::ESU_MachISA,					"MaS" },
 	};
 	
 };
