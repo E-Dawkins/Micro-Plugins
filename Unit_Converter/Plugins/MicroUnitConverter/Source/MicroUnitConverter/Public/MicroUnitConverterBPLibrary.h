@@ -8,16 +8,16 @@ struct FPrintOptions
 {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Print Options")
 	int32 MinDecimalPlaces = 0;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Print Options")
 	int32 MaxDecimalPlaces = 6;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Print Options")
 	bool bPrintToScreen = true;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Print Options")
 	bool bPrintToLog = true;
 };
 
@@ -274,16 +274,16 @@ private:
 
 	inline static const TMap<EDistanceUnit, FString> DistanceSuffix = 
 	{
-		{ EDistanceUnit::EDU_Micrometers,	"µm" },
-		{ EDistanceUnit::EDU_Millimeters,	"mm" },
-		{ EDistanceUnit::EDU_Centimeters,	"cm" },
-		{ EDistanceUnit::EDU_Meters,		"m" },
-		{ EDistanceUnit::EDU_Kilometers,	"km" },
-		{ EDistanceUnit::EDU_Inches,		"in" },
-		{ EDistanceUnit::EDU_Feet,			"ft" },
-		{ EDistanceUnit::EDU_Yards,			"yd" },
-		{ EDistanceUnit::EDU_Miles,			"mi" },
-		{ EDistanceUnit::EDU_Lightyears,	"ly" },
+		{ EDistanceUnit::EDU_Micrometers,	TEXT("\u00B5m") },
+		{ EDistanceUnit::EDU_Millimeters,	TEXT("mm") },
+		{ EDistanceUnit::EDU_Centimeters,	TEXT("cm") },
+		{ EDistanceUnit::EDU_Meters,		TEXT("m") },
+		{ EDistanceUnit::EDU_Kilometers,	TEXT("km") },
+		{ EDistanceUnit::EDU_Inches,		TEXT("in") },
+		{ EDistanceUnit::EDU_Feet,			TEXT("ft") },
+		{ EDistanceUnit::EDU_Yards,			TEXT("yd") },
+		{ EDistanceUnit::EDU_Miles,			TEXT("mi") },
+		{ EDistanceUnit::EDU_Lightyears,	TEXT("ly") },
 	};
 
 	// These ratios are measured in grams, i.e. 1mg = 0.001g
@@ -301,14 +301,14 @@ private:
 
 	inline static const TMap<EWeightUnit, FString> WeightSuffix =
 	{
-		{ EWeightUnit::EWU_Micrograms,		"µg" },
-		{ EWeightUnit::EWU_Milligrams,		"mg" },
-		{ EWeightUnit::EWU_Grams,			"g" },
-		{ EWeightUnit::EWU_Kilograms,		"kg" },
-		{ EWeightUnit::EWU_MetricTons,		"t" },
-		{ EWeightUnit::EWU_Ounces,			"oz" },
-		{ EWeightUnit::EWU_Pounds,			"lb" },
-		{ EWeightUnit::EWU_Stones,			"st" },
+		{ EWeightUnit::EWU_Micrograms,		TEXT("\u00B5g") },
+		{ EWeightUnit::EWU_Milligrams,		TEXT("mg") },
+		{ EWeightUnit::EWU_Grams,			TEXT("g") },
+		{ EWeightUnit::EWU_Kilograms,		TEXT("kg") },
+		{ EWeightUnit::EWU_MetricTons,		TEXT("t") },
+		{ EWeightUnit::EWU_Ounces,			TEXT("oz") },
+		{ EWeightUnit::EWU_Pounds,			TEXT("lb") },
+		{ EWeightUnit::EWU_Stones,			TEXT("st") },
 	};
 
 	// These ratios are measured in seconds, i.e. 1ms = 0.001s
@@ -327,15 +327,15 @@ private:
 
 	inline static const TMap<ETimeUnit, FString> TimeSuffix =
 	{
-		{ ETimeUnit::ETU_Nanoseconds,		"ns" },
-		{ ETimeUnit::ETU_Microseconds,		"µs" },
-		{ ETimeUnit::ETU_Milliseconds,		"ms" },
-		{ ETimeUnit::ETU_Seconds,			"s" },
-		{ ETimeUnit::ETU_Minutes,			"min" },
-		{ ETimeUnit::ETU_Hours,				"h" },
-		{ ETimeUnit::ETU_Days,				"d" },
-		{ ETimeUnit::ETU_Months,			"mo" },
-		{ ETimeUnit::ETU_Years,				"yr" },
+		{ ETimeUnit::ETU_Nanoseconds,		TEXT("ns") },
+		{ ETimeUnit::ETU_Microseconds,		TEXT("\u00B5s") },
+		{ ETimeUnit::ETU_Milliseconds,		TEXT("ms") },
+		{ ETimeUnit::ETU_Seconds,			TEXT("s") },
+		{ ETimeUnit::ETU_Minutes,			TEXT("min") },
+		{ ETimeUnit::ETU_Hours,				TEXT("h") },
+		{ ETimeUnit::ETU_Days,				TEXT("d") },
+		{ ETimeUnit::ETU_Months,			TEXT("mo") },
+		{ ETimeUnit::ETU_Years,				TEXT("yr") },
 	};
 
 	// These ratios are measured in kilobytes, i.e. 1MB = 1000KB
@@ -363,24 +363,24 @@ private:
 
 	inline static const TMap<EBinaryUnit, FString> BinarySuffix =
 	{
-		{ EBinaryUnit::EBU_Bits,				"b" },
-		{ EBinaryUnit::EBU_Bytes,				"B" },
-		{ EBinaryUnit::EBU_Kilobits,			"Kb" },
-		{ EBinaryUnit::EBU_Kibibits,			"Kib" },
-		{ EBinaryUnit::EBU_Kilobytes,			"KB" },
-		{ EBinaryUnit::EBU_Kibibytes,			"KiB" },
-		{ EBinaryUnit::EBU_Megabits,			"Mb" },
-		{ EBinaryUnit::EBU_Mebibits,			"Mib" },
-		{ EBinaryUnit::EBU_Megabytes,			"MB" },
-		{ EBinaryUnit::EBU_Mebibytes,			"MiB" },
-		{ EBinaryUnit::EBU_Gigabits,			"Gb" },
-		{ EBinaryUnit::EBU_Gibibits,			"Gib" },
-		{ EBinaryUnit::EBU_Gigabytes,			"GB" },
-		{ EBinaryUnit::EBU_Gibibytes,			"GiB" },
-		{ EBinaryUnit::EBU_Terabits,			"Tb" },
-		{ EBinaryUnit::EBU_Tebibits,			"Tib" },
-		{ EBinaryUnit::EBU_Terabytes,			"TB" },
-		{ EBinaryUnit::EBU_Tebibytes,			"TiB" },
+		{ EBinaryUnit::EBU_Bits,				TEXT("b") },
+		{ EBinaryUnit::EBU_Bytes,				TEXT("B") },
+		{ EBinaryUnit::EBU_Kilobits,			TEXT("Kb") },
+		{ EBinaryUnit::EBU_Kibibits,			TEXT("Kib") },
+		{ EBinaryUnit::EBU_Kilobytes,			TEXT("KB") },
+		{ EBinaryUnit::EBU_Kibibytes,			TEXT("KiB") },
+		{ EBinaryUnit::EBU_Megabits,			TEXT("Mb") },
+		{ EBinaryUnit::EBU_Mebibits,			TEXT("Mib") },
+		{ EBinaryUnit::EBU_Megabytes,			TEXT("MB") },
+		{ EBinaryUnit::EBU_Mebibytes,			TEXT("MiB") },
+		{ EBinaryUnit::EBU_Gigabits,			TEXT("Gb") },
+		{ EBinaryUnit::EBU_Gibibits,			TEXT("Gib") },
+		{ EBinaryUnit::EBU_Gigabytes,			TEXT("GB") },
+		{ EBinaryUnit::EBU_Gibibytes,			TEXT("GiB") },
+		{ EBinaryUnit::EBU_Terabits,			TEXT("Tb") },
+		{ EBinaryUnit::EBU_Tebibits,			TEXT("Tib") },
+		{ EBinaryUnit::EBU_Terabytes,			TEXT("TB") },
+		{ EBinaryUnit::EBU_Tebibytes,			TEXT("TiB") },
 	};
 
 	// These ratios are measured in fahrenheit, i.e. 100°C = 212°F
@@ -394,10 +394,10 @@ private:
 
 	inline static const TMap<ETemperatureUnit, FString> TemperatureSuffix =
 	{
-		{ ETemperatureUnit::ETU_Celsius,		"*C" },
-		{ ETemperatureUnit::ETU_Fahrenheit,		"*F" },
-		{ ETemperatureUnit::ETU_Kelvin,			"*K" },
-		{ ETemperatureUnit::ETU_Rankine,		"*R" },
+		{ ETemperatureUnit::ETU_Celsius,		TEXT("*C") },
+		{ ETemperatureUnit::ETU_Fahrenheit,		TEXT("*F") },
+		{ ETemperatureUnit::ETU_Kelvin,			TEXT("*K") },
+		{ ETemperatureUnit::ETU_Rankine,		TEXT("*R") },
 	};
 
 	// These ratios are measured in kilohertz, i.e. 1MHz = 1000KHz
@@ -416,15 +416,15 @@ private:
 
 	inline static const TMap<EFrequencyUnit, FString> FrequencySuffix =
 	{
-		{ EFrequencyUnit::EFU_Microhertz,			"µHz" },
-		{ EFrequencyUnit::EFU_Millihertz,			"mHz" },
-		{ EFrequencyUnit::EFU_Hertz,				"Hz" },
-		{ EFrequencyUnit::EFU_Kilohertz,			"kHz" },
-		{ EFrequencyUnit::EFU_Megahertz,			"MHz" },
-		{ EFrequencyUnit::EFU_Gigahertz,			"GHz" },
-		{ EFrequencyUnit::EFU_Rpm,					"rpm" },
-		{ EFrequencyUnit::EFU_DegreesPerSecond,		"deg/s" },
-		{ EFrequencyUnit::EFU_RadiansPerSecond,		"rad/s" },
+		{ EFrequencyUnit::EFU_Microhertz,			TEXT("\u00B5Hz") },
+		{ EFrequencyUnit::EFU_Millihertz,			TEXT("mHz") },
+		{ EFrequencyUnit::EFU_Hertz,				TEXT("Hz") },
+		{ EFrequencyUnit::EFU_Kilohertz,			TEXT("kHz") },
+		{ EFrequencyUnit::EFU_Megahertz,			TEXT("MHz") },
+		{ EFrequencyUnit::EFU_Gigahertz,			TEXT("GHz") },
+		{ EFrequencyUnit::EFU_Rpm,					TEXT("rpm") },
+		{ EFrequencyUnit::EFU_DegreesPerSecond,		TEXT("deg/s") },
+		{ EFrequencyUnit::EFU_RadiansPerSecond,		TEXT("rad/s") },
 	};
 
 	// These ratios are measured in Newtons, i.e. 1kN = 1000N
@@ -439,11 +439,11 @@ private:
 
 	inline static const TMap<EForceUnit, FString> ForceSuffix =
 	{
-		{ EForceUnit::EFU_Newtons,				"N" },
-		{ EForceUnit::EFU_Kilonewtons,			"kN" },
-		{ EForceUnit::EFU_PoundsForce,			"lbf" },
-		{ EForceUnit::EFU_GramsForce,			"gf" },
-		{ EForceUnit::EFU_KilogramsForce,		"kgf" },
+		{ EForceUnit::EFU_Newtons,				TEXT("N") },
+		{ EForceUnit::EFU_Kilonewtons,			TEXT("kN") },
+		{ EForceUnit::EFU_PoundsForce,			TEXT("lbf") },
+		{ EForceUnit::EFU_GramsForce,			TEXT("gf") },
+		{ EForceUnit::EFU_KilogramsForce,		TEXT("kgf") },
 	};
 
 	// These ratios are measured in kilopascals, i.e. 1MPa = 1000KPa
@@ -462,15 +462,15 @@ private:
 
 	inline static const TMap<EPressureUnit, FString> PressureSuffix =
 	{
-		{ EPressureUnit::EPU_Pascals,					"Pa" },
-		{ EPressureUnit::EPU_Kilopascals,				"kPa" },
-		{ EPressureUnit::EPU_Megapascals,				"MPa" },
-		{ EPressureUnit::EPU_Gigapascals,				"GPa" },
-		{ EPressureUnit::EPU_Bar,						"bar" },
-		{ EPressureUnit::EPU_StandardAtmosphere,		"atm" },
-		{ EPressureUnit::EPU_TechnicalAtmosphere,		"at" },
-		{ EPressureUnit::EPU_PoundsPerSquareInch,		"psi" },
-		{ EPressureUnit::EPU_MillimetersOfMercury,		"mmHg" },
+		{ EPressureUnit::EPU_Pascals,					TEXT("Pa") },
+		{ EPressureUnit::EPU_Kilopascals,				TEXT("kPa") },
+		{ EPressureUnit::EPU_Megapascals,				TEXT("MPa") },
+		{ EPressureUnit::EPU_Gigapascals,				TEXT("GPa") },
+		{ EPressureUnit::EPU_Bar,						TEXT("bar") },
+		{ EPressureUnit::EPU_StandardAtmosphere,		TEXT("atm") },
+		{ EPressureUnit::EPU_TechnicalAtmosphere,		TEXT("at") },
+		{ EPressureUnit::EPU_PoundsPerSquareInch,		TEXT("psi") },
+		{ EPressureUnit::EPU_MillimetersOfMercury,		TEXT("mmHg") },
 	};
 
 	// These ratios are measured in kg/m, i.e. 1kg/L = 1000kg/m^3
@@ -488,14 +488,14 @@ private:
 
 	inline static const TMap<EDensityUnit, FString> DensitySuffix =
 	{
-		{ EDensityUnit::EDU_GramsPerCubicCentimeter,		"g/cm^3" },
-		{ EDensityUnit::EDU_GramsPerCubicMeter,				"g/m^3" },
-		{ EDensityUnit::EDU_KilogramsPerCubicCentimeter,	"kg/cm^3" },
-		{ EDensityUnit::EDU_KilogramsPerCubicMeter,			"kg/m^3" },
-		{ EDensityUnit::EDU_GramsPerLitre,					"g/L" },
-		{ EDensityUnit::EDU_KilogramsPerLitre,				"kg/L" },
-		{ EDensityUnit::EDU_PoundsPerCubicInch,				"lb/in^3" },
-		{ EDensityUnit::EDU_PoundsPerCubicFoot,				"lb/ft^3" },
+		{ EDensityUnit::EDU_GramsPerCubicCentimeter,		TEXT("g/cm^3") },
+		{ EDensityUnit::EDU_GramsPerCubicMeter,				TEXT("g/m^3") },
+		{ EDensityUnit::EDU_KilogramsPerCubicCentimeter,	TEXT("kg/cm^3") },
+		{ EDensityUnit::EDU_KilogramsPerCubicMeter,			TEXT("kg/m^3") },
+		{ EDensityUnit::EDU_GramsPerLitre,					TEXT("g/L") },
+		{ EDensityUnit::EDU_KilogramsPerLitre,				TEXT("kg/L") },
+		{ EDensityUnit::EDU_PoundsPerCubicInch,				TEXT("lb/in^3") },
+		{ EDensityUnit::EDU_PoundsPerCubicFoot,				TEXT("lb/ft^3") },
 	};
 
 	// These ratios are measured in km/h, i.e. 1cm/s = 0.036km/h
@@ -514,15 +514,15 @@ private:
 
 	inline static const TMap<ESpeedUnit, FString> SpeedSuffix =
 	{
-		{ ESpeedUnit::ESU_CentimetersPerSecond,		"cm/s" },
-		{ ESpeedUnit::ESU_MetersPerSecond,			"m/s" },
-		{ ESpeedUnit::ESU_KilometersPerHour,		"km/h" },
-		{ ESpeedUnit::ESU_InchesPerSecond,			"in/s" },
-		{ ESpeedUnit::ESU_FeetPerSecond,			"ft/s" },
-		{ ESpeedUnit::ESU_MilesPerHour,				"mi/h" },
-		{ ESpeedUnit::ESU_Knots,					"kn" },
-		{ ESpeedUnit::ESU_Mach,						"Ma" },
-		{ ESpeedUnit::ESU_MachISA,					"MaS" },
+		{ ESpeedUnit::ESU_CentimetersPerSecond,		TEXT("cm/s") },
+		{ ESpeedUnit::ESU_MetersPerSecond,			TEXT("m/s") },
+		{ ESpeedUnit::ESU_KilometersPerHour,		TEXT("km/h") },
+		{ ESpeedUnit::ESU_InchesPerSecond,			TEXT("in/s") },
+		{ ESpeedUnit::ESU_FeetPerSecond,			TEXT("ft/s") },
+		{ ESpeedUnit::ESU_MilesPerHour,				TEXT("mi/h") },
+		{ ESpeedUnit::ESU_Knots,					TEXT("kn") },
+		{ ESpeedUnit::ESU_Mach,						TEXT("Ma") },
+		{ ESpeedUnit::ESU_MachISA,					TEXT("MaS") },
 	};
 	
 };

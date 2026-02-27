@@ -1,6 +1,8 @@
 #include "MicroUnitConverterBPLibrary.h"
 #include "MicroUnitConverter.h"
 
+#include "Engine/Engine.h"
+
 UMicroUnitConverterBPLibrary::UMicroUnitConverterBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
