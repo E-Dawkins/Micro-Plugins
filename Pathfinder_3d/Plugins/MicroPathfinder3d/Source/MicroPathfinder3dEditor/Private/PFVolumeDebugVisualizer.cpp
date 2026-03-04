@@ -13,10 +13,8 @@ void FPFVolumeDebugVisualizer::DrawVisualization(const UActorComponent* Componen
     const APFVolume* Owner = Cast<APFVolume>(DebugComp->GetOwner());
     if (!IsValid(Owner)) return;
 
-    const FVector Center = Owner->GetActorLocation();
-    const FVector HalfExtent = FVector(50.f);
-
-    const FBox Box = FBox(Center - HalfExtent, Center + HalfExtent);
-
-    DrawWireBox(PDI, Box, FLinearColor::Yellow, SDPG_Foreground, 2.f);
+    for (FGridCell Cell : Owner->Cells)
+    {
+        PDI->DrawPoint(Cell.WorldPosition, FColor::Cyan, 5.f, SDPG_World);
+    }
 }

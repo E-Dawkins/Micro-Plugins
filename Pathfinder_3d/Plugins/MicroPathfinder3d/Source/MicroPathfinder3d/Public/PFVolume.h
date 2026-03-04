@@ -11,6 +11,7 @@ struct FGridCell
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere)
 	FVector WorldPosition = {};
 };
 
@@ -20,9 +21,27 @@ class MICROPATHFINDER3D_API APFVolume : public AVolume
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, Category = "PF Volume")
+	FVector CellSize = FVector(100.f);
+
+private:
+	UPROPERTY(VisibleAnywhere, Category = "PF Volume - Debug")
+	TArray<FGridCell> Cells = {};
+
+	UPROPERTY(Transient)
+	bool bIsUpdatingPoints = false;
+
+public:
 	APFVolume();
 
-	UPROPERTY(EditAnywhere, Category = "PF Volume")
-	TArray<FGridCell> Cells = {};
+private:
+	UFUNCTION(CallInEditor, Category = "PF Volume - Debug")
+	void PopulateGrid();
+
+#if WITH_EDITOR
+	void PostEditMove(bool bFinished);
+#endif
 	
+	friend class FPFVolumeDebugVisualizer;
+
 };

@@ -7,5 +7,51 @@
 
 APFVolume::APFVolume()
 {
+#if WITH_EDITOR
+	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	TSharedRef<FPropertySection> Section = PropertyModule.FindOrCreateSection("PFVolume", "PathfindVolume", FText::FromString("Pathfind Volume"));
+	Section->AddCategory("PF Volume");
+	Section->AddCategory("PF Volume - Debug");
+#endif
+
     UPFVolumeDebugComponent* DebugComp = CreateDefaultSubobject<UPFVolumeDebugComponent>(TEXT("DebugComponent"));
 }
+
+void APFVolume::PopulateGrid()
+{
+	Cells.Empty();
+
+	const FVector HalfExtent = GetBounds().BoxExtent;
+	const FIntVector MaxCellCount = FIntVector((HalfExtent * 2.f) / CellSize);
+	const FVector StartPos = GetActorLocation() - HalfExtent;
+
+	for (int32 X = 0; X <= MaxCellCount.X; X++)
+	{
+		for (int32 Y = 0; Y <= MaxCellCount.Y; Y++)
+		{
+			for (int32 Z = 0; Z <= MaxCellCount.Z; Z++)
+			{
+				Cells.Push(FGridCell{
+					.WorldPosition = StartPos + FVector(X, Y, Z) * CellSize
+				});
+			}
+		}
+	}
+}
+
+#if WITH_EDITOR
+void APFVolume::PostEditMove(bool bFinished)
+{
+	Super::PostEditMove(bFinished);
+
+	if (bFinished)
+	{
+		if (bIsUpdatingPoints)
+			return;
+
+		TGuardValue<bool> Guard(bIsUpdatingPoints, true);
+
+		PopulateGrid();
+	}
+}
+#endif
