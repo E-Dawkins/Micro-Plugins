@@ -10,28 +10,66 @@
 
 void FMicroPathfinder3dEditorModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-    Visualizer = MakeShareable(new FPFVolumeDebugVisualizer);
+    // Since the module is loading phase 'Editor' we can immediately register section filters...
+    RegisterSectionFilters();
 
+    // ...but need to defer visualizer registration for when the engine has fully initialized
     if (GUnrealEd)
     {
-        GUnrealEd->RegisterComponentVisualizer(
-            UPFVolumeDebugComponent::StaticClass()->GetFName(),
-            Visualizer
-        );
-        Visualizer->OnRegister();
+        RegisterVisualizers();
+    }
+    else
+    {
+        FCoreDelegates::OnPostEngineInit.AddRaw(this, &FMicroPathfinder3dEditorModule::RegisterVisualizers);
     }
 }
 
 void FMicroPathfinder3dEditorModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+    UnregisterVisualizers();
+    UnregisterSectionFilters();
+}
+
+void FMicroPathfinder3dEditorModule::RegisterSectionFilters()
+{
+#if WITH_EDITOR
+    FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+    TSharedRef<FPropertySection> Section = PropertyModule.FindOrCreateSection("PFVolume", "PathfindVolume", FText::FromString("Pathfind Volume"));
+    Section->AddCategory("PF Volume");
+    Section->AddCategory("PF Volume - Debug");
+#endif
+}
+
+void FMicroPathfinder3dEditorModule::RegisterVisualizers()
+{
     if (GUnrealEd)
     {
-        GUnrealEd->UnregisterComponentVisualizer(
-            UPFVolumeDebugComponent::StaticClass()->GetFName()
-        );
+        Visualizer = MakeShareable(new FPFVolumeDebugVisualizer);
+        GUnrealEd->RegisterComponentVisualizer(UPFVolumeDebugComponent::StaticClass()->GetFName(), Visualizer);
+        Visualizer->OnRegister();
+    }
+}
+
+void FMicroPathfinder3dEditorModule::UnregisterSectionFilters()
+{
+    if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+    {
+        FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+        PropertyModule.RemoveSection("PFVolume", "PathfindVolume");
+    }
+}
+
+void FMicroPathfinder3dEditorModule::UnregisterVisualizers()
+{
+    if (GUnrealEd)
+    {
+        if (Visualizer.IsValid())
+        {
+            GUnrealEd->UnregisterComponentVisualizer("PFVolumeDebugComponent");
+            Visualizer.Reset();
+        }
     }
 }
 

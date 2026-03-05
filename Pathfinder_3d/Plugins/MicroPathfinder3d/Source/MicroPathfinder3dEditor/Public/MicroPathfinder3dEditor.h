@@ -13,5 +13,12 @@ public:
 	virtual void ShutdownModule() override;
 
 private:
+	void RegisterSectionFilters();
+	void RegisterVisualizers();
+
+	void UnregisterSectionFilters();
+	void UnregisterVisualizers();
+
+private:
     TSharedPtr<class FPFVolumeDebugVisualizer> Visualizer;
 };

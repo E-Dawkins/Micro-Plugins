@@ -15,7 +15,7 @@ struct FGridCell
 	FVector WorldPosition = {};
 };
 
-UCLASS()
+UCLASS(meta = (DisplayName = "PF Volume"))
 class MICROPATHFINDER3D_API APFVolume : public AVolume
 {
 	GENERATED_BODY()

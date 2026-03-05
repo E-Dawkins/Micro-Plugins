@@ -7,13 +7,6 @@
 
 APFVolume::APFVolume()
 {
-#if WITH_EDITOR
-	FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	TSharedRef<FPropertySection> Section = PropertyModule.FindOrCreateSection("PFVolume", "PathfindVolume", FText::FromString("Pathfind Volume"));
-	Section->AddCategory("PF Volume");
-	Section->AddCategory("PF Volume - Debug");
-#endif
-
     UPFVolumeDebugComponent* DebugComp = CreateDefaultSubobject<UPFVolumeDebugComponent>(TEXT("DebugComponent"));
 }
 
