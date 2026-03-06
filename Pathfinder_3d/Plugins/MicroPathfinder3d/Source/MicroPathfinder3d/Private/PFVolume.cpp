@@ -14,19 +14,26 @@ void APFVolume::PopulateGrid()
 {
 	Cells.Empty();
 
-	const FVector HalfExtent = GetBounds().BoxExtent;
-	const FIntVector MaxCellCount = FIntVector((HalfExtent * 2.f) / CellSize);
-	const FVector StartPos = GetActorLocation() - HalfExtent;
+	FVector Origin, BoxExtent;
+	GetActorBounds(false, Origin, BoxExtent);
 
-	for (int32 X = 0; X <= MaxCellCount.X; X++)
+	const FVector Min = (Origin - BoxExtent);
+	const FVector Max = (Origin + BoxExtent);
+
+	for (int32 X = Min.X; X <= Max.X; X += CellSize.X)
 	{
-		for (int32 Y = 0; Y <= MaxCellCount.Y; Y++)
+		for (int32 Y = Min.Y; Y <= Max.Y; Y += CellSize.Y)
 		{
-			for (int32 Z = 0; Z <= MaxCellCount.Z; Z++)
+			for (int32 Z = Min.Z; Z <= Max.Z; Z += CellSize.Z)
 			{
-				Cells.Push(FGridCell{
-					.WorldPosition = StartPos + FVector(X, Y, Z) * CellSize
-				});
+				const FVector Point = FVector(X, Y, Z);
+
+				if (EncompassesPoint(Point, KINDA_SMALL_NUMBER))
+				{
+					Cells.Push(FGridCell{
+						.WorldPosition = Point
+					});
+				}
 			}
 		}
 	}
