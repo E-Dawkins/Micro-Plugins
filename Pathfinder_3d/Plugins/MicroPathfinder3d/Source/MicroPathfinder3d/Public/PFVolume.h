@@ -39,7 +39,9 @@ private:
 	void PopulateGrid();
 
 #if WITH_EDITOR
-	void PostEditMove(bool bFinished);
+	void PostEditMove(bool bFinished) override;
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	void EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
 #endif
 	
 	friend class FPFVolumeDebugVisualizer;

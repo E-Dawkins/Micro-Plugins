@@ -14,26 +14,19 @@ void APFVolume::PopulateGrid()
 {
 	Cells.Empty();
 
-	FVector Origin, BoxExtent;
-	GetActorBounds(false, Origin, BoxExtent);
+	const FVector BoxExtent = GetBounds().BoxExtent;
+	const FIntVector MaxCellCount = FIntVector((BoxExtent * 2.f) / CellSize);
+	const FVector StartPos = GetActorLocation() - BoxExtent;
 
-	const FVector Min = (Origin - BoxExtent);
-	const FVector Max = (Origin + BoxExtent);
-
-	for (int32 X = Min.X; X <= Max.X; X += CellSize.X)
+	for (int32 X = 0; X <= MaxCellCount.X; X++)
 	{
-		for (int32 Y = Min.Y; Y <= Max.Y; Y += CellSize.Y)
+		for (int32 Y = 0; Y <= MaxCellCount.Y; Y++)
 		{
-			for (int32 Z = Min.Z; Z <= Max.Z; Z += CellSize.Z)
+			for (int32 Z = 0; Z <= MaxCellCount.Z; Z++)
 			{
-				const FVector Point = FVector(X, Y, Z);
-
-				if (EncompassesPoint(Point, KINDA_SMALL_NUMBER))
-				{
-					Cells.Push(FGridCell{
-						.WorldPosition = Point
-					});
-				}
+				Cells.Push(FGridCell{
+					.WorldPosition = StartPos + (FVector(X, Y, Z) * CellSize)
+				});
 			}
 		}
 	}
@@ -53,5 +46,33 @@ void APFVolume::PostEditMove(bool bFinished)
 
 		PopulateGrid();
 	}
+
+	// Fail-safe, if multi selecting objects and rotating
+	if (USceneComponent* Root = GetRootComponent())
+	{
+		Root->SetRelativeRotation(FRotator::ZeroRotator);
+	}
+}
+
+void APFVolume::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (!PropertyChangedEvent.MemberProperty)
+		return;
+
+	// If rotation changed in the details panel, reset it
+	if (PropertyChangedEvent.MemberProperty->GetFName() == TEXT("RelativeRotation"))
+	{
+		if (USceneComponent* Root = GetRootComponent())
+		{
+			Root->SetRelativeRotation(FRotator::ZeroRotator);
+		}
+	}
+}
+
+void APFVolume::EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
+{
+	// Ignore rotation changes via transform gizmo
 }
 #endif
