@@ -10,6 +10,42 @@ APFVolume::APFVolume()
     UPFVolumeDebugComponent* DebugComp = CreateDefaultSubobject<UPFVolumeDebugComponent>(TEXT("DebugComponent"));
 }
 
+const FGridCell& APFVolume::GetNearestGridCell(const FVector& Point)
+{
+	const int32 Index = GetNearestCellIndex(Point);
+
+	return Cells[Index];
+}
+
+const int32 APFVolume::GetNearestCellIndex(const FVector& Point) const
+{
+	// Get point relative to volume location
+	FVector PointLocal = Point - GetActorLocation();
+	
+	// Shift point to be relative to grid min corner
+	const FVector BoxExtent = GetBounds().BoxExtent;
+	PointLocal += BoxExtent;
+
+	// Round relative point to get its index per axis
+	FIntVector PointRounded(
+		FMath::RoundToInt32(PointLocal.X / CellSize.X),
+		FMath::RoundToInt32(PointLocal.Y / CellSize.Y),
+		FMath::RoundToInt32(PointLocal.Z / CellSize.Z)
+	);
+
+	// Clamp indices to valid range
+	PointRounded = {
+		FMath::Clamp(PointRounded.X, 0, CellCountsPerAxis.X - 1),
+		FMath::Clamp(PointRounded.Y, 0, CellCountsPerAxis.Y - 1),
+		FMath::Clamp(PointRounded.Z, 0, CellCountsPerAxis.Z - 1)
+	};
+
+	// Do some logic to get from per axis index to flattened index
+	return PointRounded.X * (CellCountsPerAxis.Y * CellCountsPerAxis.Z)
+		+ (PointRounded.Y * CellCountsPerAxis.Z)
+		+ PointRounded.Z;
+}
+
 void APFVolume::PopulateGrid()
 {
 	Cells.Empty();
@@ -30,6 +66,8 @@ void APFVolume::PopulateGrid()
 			}
 		}
 	}
+
+	CellCountsPerAxis = MaxCellCount + FIntVector(1);
 }
 
 #if WITH_EDITOR

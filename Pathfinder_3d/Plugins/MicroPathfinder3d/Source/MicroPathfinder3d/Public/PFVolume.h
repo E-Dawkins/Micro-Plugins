@@ -6,12 +6,12 @@
 #include "GameFramework/Volume.h"
 #include "PFVolume.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FGridCell
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector WorldPosition = {};
 };
 
@@ -28,11 +28,22 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "PF Volume - Debug")
 	TArray<FGridCell> Cells = {};
 
+	UPROPERTY(VisibleAnywhere, Category = "PF Volume - Debug")
+	FIntVector CellCountsPerAxis = FIntVector(0);
+
 	UPROPERTY(Transient)
 	bool bIsUpdatingPoints = false;
 
 public:
 	APFVolume();
+
+	// Returns nearest grid cell to the passed in point
+	UFUNCTION(BlueprintPure, Category = "PF Volume")
+	const FGridCell& GetNearestGridCell(const FVector& Point);
+
+	// Rounds passed in point to grid size, and returns cell index of that point
+	UFUNCTION(BlueprintPure, Category = "PF Volume")
+	const int32 GetNearestCellIndex(const FVector& Point) const;
 
 private:
 	UFUNCTION(CallInEditor, Category = "PF Volume - Debug")
@@ -43,7 +54,7 @@ private:
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	void EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
 #endif
-	
+
 	friend class FPFVolumeDebugVisualizer;
 
 };
