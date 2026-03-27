@@ -4,15 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Volume.h"
+#include "PFNode.h"
 #include "PFVolume.generated.h"
 
-USTRUCT(BlueprintType)
-struct FGridCell
+UENUM(BlueprintType)
+enum class ECostHeuristic : uint8
 {
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector WorldPosition = {};
+	Manhattan UMETA(ToolTip = "Fast + poor path quality"),
+	EuclideanSquared UMETA(ToolTip = "Fast + good path quality"),
+	_3dDiagonal UMETA(ToolTip = "Fast + best path quality"),
+	Chebyshev UMETA(ToolTip = "Very fast + average path quality")
 };
 
 UCLASS(meta = (DisplayName = "PF Volume"))
@@ -24,30 +25,39 @@ public:
 	UPROPERTY(EditAnywhere, Category = "PF Volume")
 	FVector CellSize = FVector(100.f);
 
+	UPROPERTY(EditAnywhere, Category = "PF Volume")
+	ECostHeuristic CostHeuristic = ECostHeuristic::_3dDiagonal;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "PF Volume - Debug")
-	TArray<FGridCell> Cells = {};
+	FIntVector CellCountsPerAxis = FIntVector(0);
 
 	UPROPERTY(VisibleAnywhere, Category = "PF Volume - Debug")
-	FIntVector CellCountsPerAxis = FIntVector(0);
+	FNodeArray Nodes = {};
 
 	UPROPERTY(Transient)
 	bool bIsUpdatingPoints = false;
 
+	UPROPERTY(VisibleAnywhere, Instanced)
+	class UPFVolumeDebugComponent* DebugComp = nullptr;
+
 public:
 	APFVolume();
 
-	// Returns nearest grid cell to the passed in point
+	// Returns passed in point rounded and clamped to grid size
 	UFUNCTION(BlueprintPure, Category = "PF Volume")
-	const FGridCell& GetNearestGridCell(const FVector& Point);
+	const FIntVector GetNearestCellIndices(const FVector& Point) const;
 
-	// Rounds passed in point to grid size, and returns cell index of that point
+	// Returns world position from axis indices
 	UFUNCTION(BlueprintPure, Category = "PF Volume")
-	const int32 GetNearestCellIndex(const FVector& Point) const;
+	const FVector GetWorldPositionFromAxisIndices(const FIntVector& AxisIndices) const;
+
+	UFUNCTION(BlueprintCallable, Category = "PF Volume")
+	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal);
 
 private:
-	UFUNCTION(CallInEditor, Category = "PF Volume - Debug")
-	void PopulateGrid();
+	float Heuristic(const FIntVector& StartIndices, const FIntVector& GoalIndices) const;
+	void GetNeighbours(const FIntVector& AxisIndices, TArray<FIntVector>& Out);
 
 #if WITH_EDITOR
 	void PostEditMove(bool bFinished) override;

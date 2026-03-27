@@ -13,8 +13,11 @@ void FPFVolumeDebugVisualizer::DrawVisualization(const UActorComponent* Componen
     const APFVolume* Owner = Cast<APFVolume>(DebugComp->GetOwner());
     if (!IsValid(Owner)) return;
 
-    for (FGridCell Cell : Owner->Cells)
-    {
-        PDI->DrawPoint(Cell.WorldPosition, FColor::Cyan, 5.f, SDPG_World);
-    }
+    const FVector OffsetOwnerLocation = Owner->GetActorLocation() - Owner->GetBounds().BoxExtent;
+
+    // Visualize all node points
+	for (const auto& [AxisIndices, Value] : Owner->Nodes)
+	{
+        PDI->DrawPoint(OffsetOwnerLocation + (FVector(AxisIndices) * Owner->CellSize), FColor::Cyan, 5.f, SDPG_World);
+	}
 }
