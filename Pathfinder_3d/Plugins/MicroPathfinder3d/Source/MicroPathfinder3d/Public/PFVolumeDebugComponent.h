@@ -8,4 +8,8 @@ UCLASS()
 class MICROPATHFINDER3D_API UPFVolumeDebugComponent : public UActorComponent
 {
     GENERATED_BODY()
+
+public:
+    UPROPERTY(EditAnywhere)
+    bool bVisualizePoints = false;
 };

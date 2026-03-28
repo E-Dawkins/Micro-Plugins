@@ -8,7 +8,7 @@
 void FPFVolumeDebugVisualizer::DrawVisualization(const UActorComponent* Component, const FSceneView* View, FPrimitiveDrawInterface* PDI)
 {
     const UPFVolumeDebugComponent* DebugComp = Cast<UPFVolumeDebugComponent>(Component);
-    if (!IsValid(DebugComp)) return;
+    if (!IsValid(DebugComp) || !DebugComp->bVisualizePoints) return;
 
     const APFVolume* Owner = Cast<APFVolume>(DebugComp->GetOwner());
     if (!IsValid(Owner)) return;
