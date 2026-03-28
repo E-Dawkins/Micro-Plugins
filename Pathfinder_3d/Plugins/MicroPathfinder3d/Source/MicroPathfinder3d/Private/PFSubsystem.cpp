@@ -51,30 +51,20 @@ float UPFSubsystem::GetDistanceToVolumeSurface(APFVolume* Volume, const FVector&
 	if (!IsValid(Volume))
 		return FLT_MAX;
 
-	UBrushComponent* Brush = Cast<UBrushComponent>(Volume->GetBrushComponent());
-	if (!Brush)
-		return FLT_MAX;
+	FVector Origin, Extents;
+	Volume->GetActorBounds(false, Origin, Extents);
 
-	UBodySetup* BodySetup = Brush->GetBodySetup();
-	if (!BodySetup)
-		return FLT_MAX;
+	const FVector Local = Point - Origin;
 
-	const FTransform& BrushTransform = Brush->GetComponentTransform();
+	const FVector Delta = Local.GetAbs() - Extents;
 
-	float ClosestDistance = FLT_MAX;
-	bool bInside = false;
+	const float OutsideDist = FVector(
+		FMath::Max(Delta.X, 0.f),
+		FMath::Max(Delta.Y, 0.f),
+		FMath::Max(Delta.Z, 0.f)
+	).Length();
 
-	for (const FKConvexElem& Convex : BodySetup->AggGeom.ConvexElems)
-	{
-		FVector ClosestPointWS = {}, ClosestNormalWS = {};
-		const float DistanceToHull = Convex.GetClosestPointAndNormal(Point, BrushTransform, ClosestPointWS, ClosestNormalWS);
+	const float InsideDist = FMath::Min(Delta.GetMax(), 0.f);
 
-		if (DistanceToHull < ClosestDistance)
-			ClosestDistance = DistanceToHull;
-
-		if (DistanceToHull == 0.f)
-			bInside = true;
-	}
-
-	return (bInside ? -ClosestDistance : ClosestDistance);
+	return (OutsideDist > 0.f ? OutsideDist : InsideDist);
 }
