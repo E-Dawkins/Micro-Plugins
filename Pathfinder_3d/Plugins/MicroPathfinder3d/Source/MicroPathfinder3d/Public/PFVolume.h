@@ -12,7 +12,7 @@ enum class ECostHeuristic : uint8
 {
 	Manhattan UMETA(ToolTip = "Fast + poor path quality"),
 	EuclideanSquared UMETA(ToolTip = "Fast + good path quality"),
-	_3dDiagonal UMETA(ToolTip = "Fast + best path quality"),
+	_3dDiagonal UMETA(ToolTip = "Fast + best path quality", DisplayName = "3d Diagonal"),
 	Chebyshev UMETA(ToolTip = "Very fast + average path quality")
 };
 
@@ -56,8 +56,8 @@ public:
 	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal);
 
 private:
-	float Heuristic(const FIntVector& StartIndices, const FIntVector& GoalIndices) const;
-	void GetNeighbours(const FIntVector& AxisIndices, TArray<FIntVector>& Out);
+	FORCEINLINE float Heuristic(int32 CurrentNodeIndex, const FIntVector& GoalIndices) const;
+	void GetNeighbours(int32 NodeIndex, TArray<int32>& Out);
 
 #if WITH_EDITOR
 	void PostEditMove(bool bFinished) override;

@@ -19,11 +19,14 @@ struct FNodeArray
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere)
+	// We do not display this in editor, can be very laggy
 	TArray<ENodeType> Array = {};
 
 	UPROPERTY(EditAnywhere)
 	FIntVector AxisSizes = {};
+
+	UPROPERTY(EditAnywhere)
+	int32 NodeCount = 0;
 
 public:
 	void Resize(const FIntVector& InAxisSizes, ENodeType DefaultValue)
@@ -33,15 +36,34 @@ public:
 		Array.Empty();
 		Array.SetNum(AxisSizes.X * AxisSizes.Y * AxisSizes.Z);
 
+		NodeCount = Array.Num();
+
 		for (auto& Elem : Array)
 		{
 			Elem = DefaultValue;
 		}
 	}
 
-	int32 GetIndex(const FIntVector& Indices) const
+	int32 GetNodeCount() const { return NodeCount; };
+
+	FORCEINLINE int32 GetIndex(const FIntVector& Indices) const
 	{
 		return Indices.X + AxisSizes.X * (Indices.Y + AxisSizes.Y * Indices.Z);
+	}
+
+	FORCEINLINE const FIntVector GetAxisIndices(int32 Index) const
+	{
+		const int32 XY = AxisSizes.X * AxisSizes.Y;
+
+		FIntVector Out = {};
+
+		Out.Z = Index / XY;
+		const int32 Rem = Index - Out.Z * XY;
+
+		Out.Y = Rem / AxisSizes.X;
+		Out.X = Rem - Out.Y * AxisSizes.X;
+
+		return Out;
 	}
 
 	ENodeType& operator () (const FIntVector& Indices)

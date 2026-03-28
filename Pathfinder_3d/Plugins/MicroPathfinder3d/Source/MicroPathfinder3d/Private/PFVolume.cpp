@@ -50,163 +50,176 @@ const FVector APFVolume::GetWorldPositionFromAxisIndices(const FIntVector& AxisI
 
 TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal)
 {
-	const FIntVector StartIndices = GetNearestCellIndices(Start);
+	double StartTime = FPlatformTime::Seconds();
+
+	const int32 StartIndex = Nodes.GetIndex(GetNearestCellIndices(Start));
 	const FIntVector GoalIndices = GetNearestCellIndices(Goal);
+	const int32 GoalIndex = Nodes.GetIndex(GoalIndices);
+	const int32 NodeCount = Nodes.GetNodeCount();
 
-	struct FFloatDefaultedToInfinity { float Value = INFINITY; };
-	using ScoreMap = TMap<FIntVector, FFloatDefaultedToInfinity>;
+	TArray<float> GScore;
+	TArray<float> FScore;
+	TArray<int32> CameFrom;
+	TArray<uint8> Visited;
 
-	ScoreMap GScore = {};
-	GScore.Add(StartIndices, { 0.f });
+	// Allocate arrays now, but do *not* initialize them
+	{
+		GScore.SetNumUninitialized(NodeCount);
+		FScore.SetNumUninitialized(NodeCount);
+		CameFrom.SetNumUninitialized(NodeCount);
+		Visited.SetNumZeroed(NodeCount);
+	}
 
-	ScoreMap FScore = {};
-	FScore.Add(StartIndices, { Heuristic(StartIndices, GoalIndices) });
+	// Lazy init start node
+	{
+		GScore[StartIndex] = 0.f;
+		FScore[StartIndex] = Heuristic(StartIndex, GoalIndices);
+		CameFrom[StartIndex] = INDEX_NONE;
+		Visited[StartIndex] = true;
+	}
 
 	struct FNodeCompare
 	{
-		const ScoreMap& FScore;
-
-		FNodeCompare(const ScoreMap& InFScore)
-			: FScore(InFScore) {}
-
-		bool operator () (const FIntVector& A, const FIntVector& B) const
-		{
-			auto ItA = FScore.Find(A);
-			auto ItB = FScore.Find(B);
-
-			float FA = (ItA ? ItA->Value : INFINITY);
-			float FB = (ItB ? ItB->Value : INFINITY);
-
-			return FScore[A].Value > FScore[B].Value;
-		}
+		const TArray<float>& FScore;
+		bool operator()(int32 A, int32 B) const { return FScore[A] > FScore[B]; }
 	};
-	using TMinHeap = std::priority_queue<FIntVector, std::vector<FIntVector>, FNodeCompare>;
-	TMinHeap OpenSet{ FNodeCompare(FScore) };
-	OpenSet.push(StartIndices);
 
-	// Required for checking if node is in open set or not
-	TSet<FIntVector> InOpenSet = { StartIndices };
+	std::priority_queue<int32, std::vector<int32>, FNodeCompare> OpenSet{ FNodeCompare(FScore) };
+	OpenSet.push(StartIndex);
 
-	TMap<FIntVector, FIntVector> CameFrom = {};
+	TArray<int32> Neighbours = {};
+	Neighbours.Reserve(26);
 
 	// On the off chance that the proceeding while loop instantly exits
 	// we store this outside it to reconstruct the path afterwards
-	FIntVector Current = StartIndices;
+	int32 Current = StartIndex;
 
 	while (!OpenSet.empty())
 	{
 		Current = OpenSet.top();
-		if (Current == GoalIndices)
+		OpenSet.pop();
+
+		if (Current == GoalIndex)
 			break;
 
-		OpenSet.pop();
-		InOpenSet.Remove(Current);
+		// Only access current gscore once per neighbour loop
+		const float& GScoreCurrent = GScore[Current];
 
-		TArray<FIntVector> Neighbours = {};
+		// If edge weights are ever added, move this back into the neighbour loop
+		// Currently each edge is uniform 1.f in weight
+		const float TentativeGScore = GScoreCurrent + 1.f;
+
 		GetNeighbours(Current, Neighbours);
-
-		for (const FIntVector& N : Neighbours)
+		for (int32 N : Neighbours)
 		{
-			// Failsafe, not sure what happens if you do +1.f to infinity...
-			auto* GCurrentPtr = GScore.Find(Current);
-			if (!GCurrentPtr || GCurrentPtr->Value == INFINITY) continue;
-
-			// Currently each edge is uniform 1.f in weight
-			float TentativeGScore = GCurrentPtr->Value + 1.f;
-
-			auto* GNPtr = GScore.Find(N);
-			float GN = (GNPtr ? GNPtr->Value : INFINITY);
-
-			if (TentativeGScore < GN)
+			// Lazy init neighbour
+			if (!Visited[N])
 			{
-				CameFrom.Add(N, Current);
-				GScore.Add(N, { TentativeGScore });
-				FScore.Add(N, { TentativeGScore + Heuristic(N, GoalIndices) });
+				GScore[N] = FLT_MAX;
+				FScore[N] = FLT_MAX;
+				CameFrom[N] = INDEX_NONE;
+				Visited[N] = true;
+			}
 
-				if (!InOpenSet.Contains(N))
-				{
-					OpenSet.push(N);
-					InOpenSet.Add(N);
-				}
+			if (TentativeGScore < GScore[N])
+			{
+				CameFrom[N] = Current;
+				GScore[N] = TentativeGScore;
+				FScore[N] = TentativeGScore + Heuristic(N, GoalIndices);
+
+				// Allow duplicates as eventually we *will* reach the goal
+				OpenSet.push(N);
 			}
 		}
 	}
 
 	// Reconstruct path
-	TArray<FVector> Path = { GetWorldPositionFromAxisIndices(Current) };
-	while (CameFrom.Contains(Current))
+	TArray<FVector> Path = {};
+	while (Current != INDEX_NONE)
 	{
+		Path.Add(GetWorldPositionFromAxisIndices(Nodes.GetAxisIndices(Current)));
 		Current = CameFrom[Current];
-		Path.Insert(GetWorldPositionFromAxisIndices(Current), 0);
 	}
+
+	Algo::Reverse(Path);
+
+	double EndTime = FPlatformTime::Seconds();
+	double ElapsedMs = (EndTime - StartTime) * 1000.0;
+	UE_LOG(LogTemp, Warning, TEXT("%hs took %.6f ms"), __FUNCTION__, ElapsedMs);
 
 	return Path;
 }
 
-float APFVolume::Heuristic(const FIntVector& StartIndices, const FIntVector& GoalIndices) const
+float APFVolume::Heuristic(int32 CurrentNodeIndex, const FIntVector& GoalIndices) const
 {
-	const FVector& Start = GetWorldPositionFromAxisIndices(StartIndices);
-	const FVector& Goal = GetWorldPositionFromAxisIndices(GoalIndices);
+	const FIntVector CurrentNodeIndices = Nodes.GetAxisIndices(CurrentNodeIndex);
+
+	const float Dx = FMath::Abs(CurrentNodeIndices.X - GoalIndices.X);
+	const float Dy = FMath::Abs(CurrentNodeIndices.Y - GoalIndices.Y);
+	const float Dz = FMath::Abs(CurrentNodeIndices.Z - GoalIndices.Z);
 
 	switch (CostHeuristic)
 	{
 		case ECostHeuristic::EuclideanSquared:
 		{
-			return FVector::DistSquared(Start, Goal);
+			return Dx*Dx + Dy*Dy + Dz*Dz;
 		}
 		case ECostHeuristic::_3dDiagonal:
 		{
-			const float Dx = FMath::Abs(Start.X - Goal.X);
-			const float Dy = FMath::Abs(Start.Y - Goal.Y);
-			const float Dz = FMath::Abs(Start.Z - Goal.Z);
+			const float Min = FMath::Min3(Dx, Dy, Dz);
+			const float Max = FMath::Max3(Dx, Dy, Dz);
+			const float Mid = Dx + Dy + Dz - Min - Max;
 
-			const float D1 = FMath::Min3(Dx, Dy, Dz);
-			const float D3 = FMath::Max3(Dx, Dy, Dz);
-			const float D2 = Dx + Dy + Dz - D1 - D3;
-
-			return D1 * 1.73205081f			// ~ root 3
-				+ (D2 - D1) * 1.41421356f	// ~ root 2
-				+ (D3 - D2);				// straight steps
+			return Min * 1.73205081f			// ~ root 3
+				+ (Mid - Min) * 1.41421356f	// ~ root 2
+				+ (Max - Mid);				// straight steps
 		}
 		case ECostHeuristic::Chebyshev:
 		{
-			const float Dx = FMath::Abs(Start.X - Goal.X);
-			const float Dy = FMath::Abs(Start.Y - Goal.Y);
-			const float Dz = FMath::Abs(Start.Z - Goal.Z);
-
 			return FMath::Max3(Dx, Dy, Dz);
 		}
 		default:
 		{
 			// Default to Manhattan distance
-			return FMath::Abs(Start.X - Goal.X)
-				+ FMath::Abs(Start.Y - Goal.Y)
-				+ FMath::Abs(Start.Z - Goal.Z);
+			return Dx + Dy + Dz;
 		}
 	}
 }
 
-void APFVolume::GetNeighbours(const FIntVector& AxisIndices, TArray<FIntVector>& Out)
+void APFVolume::GetNeighbours(int32 NodeIndex, TArray<int32>& Out)
 {
-	Out.Empty();
+	Out.Reset();
 
-	for (int32 XOffset = -1; XOffset <= 1; XOffset++)
+	const FIntVector NodeIndices = Nodes.GetAxisIndices(NodeIndex);
+	FIntVector NeighbourIndices = {};
+
+	static constexpr int32 Offsets[26][3] = {
+		{ -1, -1, -1 }, { -1,  0, -1 }, { -1,  1, -1 },
+		{ -1, -1,  0 },	{ -1,  0,  0 },	{ -1,  1,  0 },
+		{ -1, -1,  1 },	{ -1,  0,  1 },	{ -1,  1,  1 },
+
+		{  0, -1, -1 }, {  0,  0, -1 }, {  0,  1, -1 },
+		{  0, -1,  0 },	                {  0,  1,  0 },
+		{  0, -1,  1 },	{  0,  0,  1 },	{  0,  1,  1 },
+
+		{  1, -1, -1 }, {  1,  0, -1 }, {  1,  1, -1 },
+		{  1, -1,  0 },	{  1,  0,  0 },	{  1,  1,  0 },
+		{  1, -1,  1 },	{  1,  0,  1 },	{  1,  1,  1 }
+	};
+
+	for (const int32* Offset : Offsets)
 	{
-		for (int32 YOffset = -1; YOffset <= 1; YOffset++)
-		{
-			for (int32 ZOffset = -1; ZOffset <= 1; ZOffset++)
-			{
-				// Skip ourself :)
-				if (XOffset == 0 && YOffset == 0 && ZOffset == 0) continue;
+		NeighbourIndices = {
+			NodeIndices.X + Offset[0],
+			NodeIndices.Y + Offset[1],
+			NodeIndices.Z + Offset[2],
+		};
 
-				const FIntVector NeighbourIndices = AxisIndices + FIntVector{ XOffset, YOffset, ZOffset };
-				if (0 <= NeighbourIndices.X && NeighbourIndices.X < CellCountsPerAxis.X &&
-					0 <= NeighbourIndices.Y && NeighbourIndices.Y < CellCountsPerAxis.Y &&
-					0 <= NeighbourIndices.Z && NeighbourIndices.Z < CellCountsPerAxis.Z)
-				{
-					Out.Add(NeighbourIndices);
-				}
-			}
+		if (0 <= NeighbourIndices.X && NeighbourIndices.X < CellCountsPerAxis.X &&
+			0 <= NeighbourIndices.Y && NeighbourIndices.Y < CellCountsPerAxis.Y &&
+			0 <= NeighbourIndices.Z && NeighbourIndices.Z < CellCountsPerAxis.Z)
+		{
+			Out.Emplace(Nodes.GetIndex(NeighbourIndices));
 		}
 	}
 }
