@@ -10,10 +10,11 @@
 UENUM(BlueprintType)
 enum class ECostHeuristic : uint8
 {
-	Manhattan UMETA(ToolTip = "Fast + poor path quality"),
-	EuclideanSquared UMETA(ToolTip = "Fast + good path quality"),
-	_3dDiagonal UMETA(ToolTip = "Fast + best path quality", DisplayName = "3d Diagonal"),
-	Chebyshev UMETA(ToolTip = "Very fast + average path quality")
+	Manhattan			UMETA(ToolTip = "Slow + worst path quality"),
+	TrueEuclidean		UMETA(ToolTip = "Fast + average path quality"),
+	EuclideanSquared	UMETA(ToolTip = "Fastest + decent path quality"),
+	Diagonal3d			UMETA(ToolTip = "Slowest + best path quality", DisplayName = "3d Diagonal"),
+	Chebyshev			UMETA(ToolTip = "Average + poor path quality")
 };
 
 UCLASS(meta = (DisplayName = "PF Volume"))
@@ -26,7 +27,7 @@ public:
 	FVector CellSize = FVector(100.f);
 
 	UPROPERTY(EditAnywhere, Category = "PF Volume")
-	ECostHeuristic CostHeuristic = ECostHeuristic::_3dDiagonal;
+	ECostHeuristic CostHeuristic = ECostHeuristic::Diagonal3d;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "PF Volume - Debug")
@@ -52,12 +53,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "PF Volume")
 	const FVector GetWorldPositionFromAxisIndices(const FIntVector& AxisIndices) const;
 
-	UFUNCTION(BlueprintCallable, Category = "PF Volume")
-	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal);
+	UFUNCTION(BlueprintCallable, Category = "PF Volume", meta = (AdvancedDisplay = "NodeType"))
+	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType = ENodeType::None);
 
 private:
-	FORCEINLINE float Heuristic(int32 CurrentNodeIndex, const FIntVector& GoalIndices) const;
+	FORCEINLINE float Heuristic(const FIntVector& CurrentNodeIndices, const FIntVector& GoalIndices) const;
 	void GetNeighbours(int32 NodeIndex, TArray<int32>& Out);
+	float MovementCost(const FIntVector& A, const FIntVector& B);
+
+	void CheckGridForCollisions();
 
 #if WITH_EDITOR
 	void PostEditMove(bool bFinished) override;

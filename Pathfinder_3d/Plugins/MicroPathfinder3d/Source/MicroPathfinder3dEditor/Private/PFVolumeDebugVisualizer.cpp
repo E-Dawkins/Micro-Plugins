@@ -18,6 +18,7 @@ void FPFVolumeDebugVisualizer::DrawVisualization(const UActorComponent* Componen
     // Visualize all node points
 	for (const auto& [AxisIndices, Value] : Owner->Nodes)
 	{
-        PDI->DrawPoint(OffsetOwnerLocation + (FVector(AxisIndices) * Owner->CellSize), FColor::Cyan, 5.f, SDPG_World);
+        FColor PointColor = (Value == ENodeType::OpenAir ? FColor::Cyan : FColor::Red);
+        PDI->DrawPoint(OffsetOwnerLocation + (FVector(AxisIndices) * Owner->CellSize), PointColor, 5.f, SDPG_World);
 	}
 }

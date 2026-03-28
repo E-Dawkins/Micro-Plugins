@@ -48,12 +48,13 @@ const FVector APFVolume::GetWorldPositionFromAxisIndices(const FIntVector& AxisI
 
 #include <queue>
 
-TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal)
+TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType)
 {
 	double StartTime = FPlatformTime::Seconds();
 
-	const int32 StartIndex = Nodes.GetIndex(GetNearestCellIndices(Start));
+	const FIntVector StartIndices = GetNearestCellIndices(Start);
 	const FIntVector GoalIndices = GetNearestCellIndices(Goal);
+	const int32 StartIndex = Nodes.GetIndex(StartIndices);
 	const int32 GoalIndex = Nodes.GetIndex(GoalIndices);
 	const int32 NodeCount = Nodes.GetNodeCount();
 
@@ -73,7 +74,7 @@ TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal)
 	// Lazy init start node
 	{
 		GScore[StartIndex] = 0.f;
-		FScore[StartIndex] = Heuristic(StartIndex, GoalIndices);
+		FScore[StartIndex] = Heuristic(StartIndices, GoalIndices);
 		CameFrom[StartIndex] = INDEX_NONE;
 		Visited[StartIndex] = true;
 	}
@@ -102,16 +103,17 @@ TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal)
 		if (Current == GoalIndex)
 			break;
 
-		// Only access current gscore once per neighbour loop
+		// Only access current node data once per neighbour loop
 		const float& GScoreCurrent = GScore[Current];
-
-		// If edge weights are ever added, move this back into the neighbour loop
-		// Currently each edge is uniform 1.f in weight
-		const float TentativeGScore = GScoreCurrent + 1.f;
+		const FIntVector CurrentIndices = Nodes.GetAxisIndices(Current);
 
 		GetNeighbours(Current, Neighbours);
 		for (int32 N : Neighbours)
 		{
+			// Check if 1. we are looking for a specific node type, and 2. this node is of that type
+			if (NodeType != ENodeType::None && Nodes[N] != NodeType)
+				continue;
+
 			// Lazy init neighbour
 			if (!Visited[N])
 			{
@@ -121,13 +123,17 @@ TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal)
 				Visited[N] = true;
 			}
 
+			const FIntVector NeighbourIndices = Nodes.GetAxisIndices(N);
+			const float StepCost = MovementCost(CurrentIndices, NeighbourIndices);
+
+			const float TentativeGScore = GScoreCurrent + StepCost;
 			if (TentativeGScore < GScore[N])
 			{
 				CameFrom[N] = Current;
 				GScore[N] = TentativeGScore;
-				FScore[N] = TentativeGScore + Heuristic(N, GoalIndices);
+				FScore[N] = TentativeGScore + Heuristic(NeighbourIndices, GoalIndices);
 
-				// Allow duplicates as eventually we *will* reach the goal
+				// Allow duplicates as eventually we *should* reach the goal
 				OpenSet.push(N);
 			}
 		}
@@ -150,21 +156,23 @@ TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal)
 	return Path;
 }
 
-float APFVolume::Heuristic(int32 CurrentNodeIndex, const FIntVector& GoalIndices) const
+float APFVolume::Heuristic(const FIntVector& CurrentNodeIndices, const FIntVector& GoalIndices) const
 {
-	const FIntVector CurrentNodeIndices = Nodes.GetAxisIndices(CurrentNodeIndex);
-
 	const float Dx = FMath::Abs(CurrentNodeIndices.X - GoalIndices.X);
 	const float Dy = FMath::Abs(CurrentNodeIndices.Y - GoalIndices.Y);
 	const float Dz = FMath::Abs(CurrentNodeIndices.Z - GoalIndices.Z);
 
 	switch (CostHeuristic)
 	{
+		case ECostHeuristic::TrueEuclidean:
+		{
+			return FMath::Sqrt(Dx*Dx + Dy*Dy + Dz*Dz);
+		}
 		case ECostHeuristic::EuclideanSquared:
 		{
 			return Dx*Dx + Dy*Dy + Dz*Dz;
 		}
-		case ECostHeuristic::_3dDiagonal:
+		case ECostHeuristic::Diagonal3d:
 		{
 			const float Min = FMath::Min3(Dx, Dy, Dz);
 			const float Max = FMath::Max3(Dx, Dy, Dz);
@@ -224,6 +232,31 @@ void APFVolume::GetNeighbours(int32 NodeIndex, TArray<int32>& Out)
 	}
 }
 
+float APFVolume::MovementCost(const FIntVector& A, const FIntVector& B)
+{
+	const int dx = FMath::Abs(A.X - B.X);
+	const int dy = FMath::Abs(A.Y - B.Y);
+	const int dz = FMath::Abs(A.Z - B.Z);
+
+	const int sum = dx + dy + dz;
+
+	if (sum == 1) return 1.f;            // straight
+	if (sum == 2) return 1.41421356f;    // 2-axis diagonal
+	return 1.73205081f;                  // 3-axis diagonal
+}
+
+void APFVolume::CheckGridForCollisions()
+{
+	for (const auto& [AxisIndices, Value] : Nodes)
+	{
+		const FVector WorldPosition = GetWorldPositionFromAxisIndices(AxisIndices);
+
+		bool bIsOverlapping = GetWorld()->OverlapBlockingTestByChannel(WorldPosition, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeBox(CellSize * 0.5f));
+
+		Nodes[AxisIndices] = (bIsOverlapping ? ENodeType::InsideWall : ENodeType::OpenAir);
+	}
+}
+
 #if WITH_EDITOR
 void APFVolume::PostEditMove(bool bFinished)
 {
@@ -239,12 +272,15 @@ void APFVolume::PostEditMove(bool bFinished)
 		const FVector BoxExtent = GetBounds().BoxExtent;
 		const FIntVector MaxCellCount = FIntVector((BoxExtent * 2.f) / CellSize) + FIntVector(1);
 
-		// Only update nodes if cell count has changed
-		if (CellCountsPerAxis != MaxCellCount)
+		// Only update nodes if cell count has changed,
+		// or node count has desynced from real array size
+		if (CellCountsPerAxis != MaxCellCount || Nodes.GetNodeCount() != Nodes.GetRawNodeCount())
 		{
 			CellCountsPerAxis = MaxCellCount;
 			Nodes.Resize(CellCountsPerAxis, ENodeType::OpenAir);
 		}
+
+		CheckGridForCollisions();
 	}
 
 	// Fail-safe, if multi selecting objects and rotating

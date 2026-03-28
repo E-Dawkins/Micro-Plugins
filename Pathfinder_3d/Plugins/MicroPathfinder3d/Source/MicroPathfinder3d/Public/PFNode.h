@@ -8,6 +8,7 @@
 UENUM(BlueprintType)
 enum class ENodeType : uint8
 {
+	None,
 	OpenAir,
 	InsideWall,
 	NearWall
@@ -20,6 +21,7 @@ struct FNodeArray
 
 private:
 	// We do not display this in editor, can be very laggy
+	UPROPERTY(meta = (HideInDetailPanel))
 	TArray<ENodeType> Array = {};
 
 	UPROPERTY(EditAnywhere)
@@ -34,17 +36,16 @@ public:
 		AxisSizes = InAxisSizes;
 
 		Array.Empty();
-		Array.SetNum(AxisSizes.X * AxisSizes.Y * AxisSizes.Z);
+		Array.Init(DefaultValue, AxisSizes.X * AxisSizes.Y * AxisSizes.Z);
 
 		NodeCount = Array.Num();
-
-		for (auto& Elem : Array)
-		{
-			Elem = DefaultValue;
-		}
 	}
 
+	// Gets the pre-calculated node count
 	int32 GetNodeCount() const { return NodeCount; };
+
+	// Gets the underlying array's count
+	int32 GetRawNodeCount() const { return Array.Num(); }
 
 	FORCEINLINE int32 GetIndex(const FIntVector& Indices) const
 	{
@@ -66,26 +67,43 @@ public:
 		return Out;
 	}
 
-	ENodeType& operator () (const FIntVector& Indices)
+	ENodeType& operator [] (const FIntVector& Indices)
 	{
 		return Array[GetIndex(Indices)];
 	}
 
-	const ENodeType& operator () (const FIntVector& Indices) const
+	const ENodeType& operator [] (const FIntVector& Indices) const
 	{
 		return Array[GetIndex(Indices)];
+	}
+
+	ENodeType& operator [] (int32 Index)
+	{
+		return Array[Index];
+	}
+
+	const ENodeType& operator [] (int32 Index) const
+	{
+		return Array[Index];
 	}
 
 	struct FIterator
 	{
 		FNodeArray* NodeArray;
 		int32 Index;
+		int32 ElemCount;
 
 		bool operator != (const FIterator& Other) const { return Index != Other.Index; }
-		void operator ++ () { ++Index; }
+		FIterator& operator ++ ()
+		{
+			++Index;
+			return *this;
+		}
 
 		auto operator * () const
 		{
+			check(Index < ElemCount);
+
 			int32 X = Index % NodeArray->AxisSizes.X;
 			int32 Y = (Index / NodeArray->AxisSizes.X) % NodeArray->AxisSizes.Y;
 			int32 Z = Index / (NodeArray->AxisSizes.X * NodeArray->AxisSizes.Y);
@@ -100,12 +118,19 @@ public:
 	{
 		const FNodeArray* NodeArray;
 		int32 Index;
+		int32 ElemCount;
 
 		bool operator != (const FConstIterator& Other) const { return Index != Other.Index; }
-		void operator ++ () { ++Index; }
+		FConstIterator& operator ++ ()
+		{
+			++Index;
+			return *this;
+		}
 
 		auto operator * () const
 		{
+			check(Index < ElemCount);
+
 			int32 X = Index % NodeArray->AxisSizes.X;
 			int32 Y = (Index / NodeArray->AxisSizes.X) % NodeArray->AxisSizes.Y;
 			int32 Z = Index / (NodeArray->AxisSizes.X * NodeArray->AxisSizes.Y);
@@ -116,12 +141,12 @@ public:
 		}
 	};
 
-	FIterator begin() { return FIterator{ this, 0 }; }
-	FIterator end() { return FIterator{ this, AxisSizes.X * AxisSizes.Y * AxisSizes.Z }; }
+	FIterator begin() { return FIterator{ this, 0, Array.Num() }; }
+	FIterator end() { return FIterator{ this, Array.Num(), Array.Num() }; }
 
-	FConstIterator begin() const { return FConstIterator{ this, 0 }; }
-	FConstIterator end() const { return FConstIterator{ this, AxisSizes.X * AxisSizes.Y * AxisSizes.Z }; }
+	FConstIterator begin() const { return FConstIterator{ this, 0, Array.Num() }; }
+	FConstIterator end() const { return FConstIterator{ this, Array.Num(), Array.Num() }; }
 
-	FConstIterator cbegin() const { return FConstIterator{ this, 0 }; }
-	FConstIterator cend() const { return FConstIterator{ this, AxisSizes.X * AxisSizes.Y * AxisSizes.Z }; }
+	FConstIterator cbegin() const { return FConstIterator{ this, 0, Array.Num() }; }
+	FConstIterator cend() const { return FConstIterator{ this, Array.Num(), Array.Num() }; }
 };
