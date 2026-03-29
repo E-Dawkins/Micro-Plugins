@@ -2,16 +2,24 @@
 
 #include "MicroPathfinder3dEditor.h"
 
+#if WITH_EDITOR
 #include "PFVolumeDebugVisualizer.h"
 #include "PFVolumeDebugComponent.h"
 #include "UnrealEd.h"
+#include "NodeStyleCustomization.h"
+#endif
 
 #define LOCTEXT_NAMESPACE "FMicroPathfinder3dEditorModule"
 
+// Below we *don't* wrap Startup/Shutdown module functions as they are not editor-only
+// All other functions in this module are editor-only, and should be treated as such
+
 void FMicroPathfinder3dEditorModule::StartupModule()
 {
-    // Since the module is loading phase 'Editor' we can immediately register section filters...
+#if WITH_EDITOR
+    // Since the module is loading phase 'Editor' we can immediately register property stuff...
     RegisterSectionFilters();
+    RegisterPropertyCustomizations();
 
     // ...but need to defer visualizer registration for when the engine has fully initialized
     if (GUnrealEd)
@@ -22,23 +30,41 @@ void FMicroPathfinder3dEditorModule::StartupModule()
     {
         FCoreDelegates::OnPostEngineInit.AddRaw(this, &FMicroPathfinder3dEditorModule::RegisterVisualizers);
     }
+#endif
 }
 
 void FMicroPathfinder3dEditorModule::ShutdownModule()
 {
+#if WITH_EDITOR
     UnregisterVisualizers();
+    UnregisterPropertyCustomizations();
     UnregisterSectionFilters();
+#endif
 }
 
+#if WITH_EDITOR
 void FMicroPathfinder3dEditorModule::RegisterSectionFilters()
 {
-#if WITH_EDITOR
     FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
     TSharedRef<FPropertySection> Section = PropertyModule.FindOrCreateSection("PFVolume", "PathfindVolume", FText::FromString("Pathfind Volume"));
     Section->AddCategory("PF Volume");
     Section->AddCategory("PF Volume - Debug");
-#endif
+}
+
+void FMicroPathfinder3dEditorModule::RegisterPropertyCustomizations()
+{
+    FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+    PropertyModule.RegisterCustomPropertyTypeLayout(
+        "NodeStyle",
+        FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FNodeStyleCustomization::MakeInstance)
+    );
+
+    PropertyModule.RegisterCustomPropertyTypeLayout(
+        "NodeStyleArray",
+        FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FNodeStyleArrayCustomization::MakeInstance)
+    );
 }
 
 void FMicroPathfinder3dEditorModule::RegisterVisualizers()
@@ -61,6 +87,17 @@ void FMicroPathfinder3dEditorModule::UnregisterSectionFilters()
     }
 }
 
+void FMicroPathfinder3dEditorModule::UnregisterPropertyCustomizations()
+{
+    if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+    {
+        FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+
+        PropertyModule.UnregisterCustomPropertyTypeLayout("NodeStyle");
+        PropertyModule.UnregisterCustomPropertyTypeLayout("NodeStyleArray");
+    }
+}
+
 void FMicroPathfinder3dEditorModule::UnregisterVisualizers()
 {
     if (GUnrealEd)
@@ -72,6 +109,7 @@ void FMicroPathfinder3dEditorModule::UnregisterVisualizers()
         }
     }
 }
+#endif
 
 #undef LOCTEXT_NAMESPACE
 	

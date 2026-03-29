@@ -16,7 +16,8 @@ public class MicroPathfinder3dEditor : ModuleRules
 				"Engine",
 				"UnrealEd",				// required for component visualizers
 				"Slate",
-				"SlateCore"
+				"SlateCore",
+				"PropertyEditor"		// required for custom details panels
 			}
 		);
 			

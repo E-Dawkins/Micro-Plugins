@@ -2,7 +2,32 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "PFNode.h"
 #include "PFVolumeDebugComponent.generated.h"
+
+USTRUCT(BlueprintType)
+struct FNodeStyle
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere)
+    ENodeType Type;
+
+    UPROPERTY(EditAnywhere)
+    FLinearColor Color;
+};
+
+USTRUCT(BlueprintType)
+struct FNodeStyleArray
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, EditFixedSize, meta=(EditFixedOrder))
+    TArray<FNodeStyle> Items = {
+        { ENodeType::OpenAir, FColor::Cyan },
+        { ENodeType::InsideWall, FColor::Red },
+    };
+};
 
 UCLASS()
 class MICROPATHFINDER3D_API UPFVolumeDebugComponent : public UActorComponent
@@ -12,4 +37,7 @@ class MICROPATHFINDER3D_API UPFVolumeDebugComponent : public UActorComponent
 public:
     UPROPERTY(EditAnywhere)
     bool bVisualizePoints = false;
+
+    UPROPERTY(EditAnywhere)
+    FNodeStyleArray NodeStyles;
 };

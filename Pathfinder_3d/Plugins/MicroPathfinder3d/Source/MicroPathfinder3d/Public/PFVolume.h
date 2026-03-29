@@ -27,7 +27,7 @@ public:
 	FVector CellSize = FVector(100.f);
 
 	UPROPERTY(EditAnywhere, Category = "PF Volume")
-	ECostHeuristic CostHeuristic = ECostHeuristic::Diagonal3d;
+	ECostHeuristic CostHeuristic = ECostHeuristic::EuclideanSquared;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "PF Volume - Debug")

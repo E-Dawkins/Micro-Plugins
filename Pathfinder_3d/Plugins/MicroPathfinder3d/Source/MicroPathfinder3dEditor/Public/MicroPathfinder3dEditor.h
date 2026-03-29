@@ -12,13 +12,19 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+#if WITH_EDITOR
 private:
 	void RegisterSectionFilters();
+	void RegisterPropertyCustomizations();
+
 	void RegisterVisualizers();
 
 	void UnregisterSectionFilters();
+	void UnregisterPropertyCustomizations();
+
 	void UnregisterVisualizers();
 
 private:
     TSharedPtr<class FPFVolumeDebugVisualizer> Visualizer;
+#endif
 };
