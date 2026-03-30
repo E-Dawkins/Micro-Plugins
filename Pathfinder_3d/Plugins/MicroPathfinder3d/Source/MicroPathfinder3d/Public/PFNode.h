@@ -9,9 +9,9 @@ UENUM(BlueprintType)
 enum class ENodeType : uint8
 {
 	None,
-	OpenAir,
-	InsideWall,
-	NearWall
+	Open,
+	InCollision,
+	NearCollision
 };
 
 USTRUCT(BlueprintType)

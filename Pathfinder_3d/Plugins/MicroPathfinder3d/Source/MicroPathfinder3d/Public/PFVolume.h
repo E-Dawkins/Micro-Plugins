@@ -53,12 +53,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "PF Volume")
 	const FVector GetWorldPositionFromAxisIndices(const FIntVector& AxisIndices) const;
 
-	UFUNCTION(BlueprintCallable, Category = "PF Volume", meta = (AdvancedDisplay = "NodeType"))
-	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType = ENodeType::None);
+	UFUNCTION(BlueprintCallable, Category = "PF Volume", meta = (AdvancedDisplay = "NodeType,bIncludeDiagonals"))
+	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType = ENodeType::None, bool bIncludeDiagonals = true);
 
 private:
 	FORCEINLINE float Heuristic(const FIntVector& CurrentNodeIndices, const FIntVector& GoalIndices) const;
-	void GetNeighbours(int32 NodeIndex, TArray<int32>& Out);
+	void GetNeighbours(int32 NodeIndex, bool bIncludeDiagonals, TArray<int32>& Out);
 	float MovementCost(const FIntVector& A, const FIntVector& B);
 
 	void CheckGridForCollisions();

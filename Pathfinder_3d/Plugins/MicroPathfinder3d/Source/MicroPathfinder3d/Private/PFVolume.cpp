@@ -48,7 +48,7 @@ const FVector APFVolume::GetWorldPositionFromAxisIndices(const FIntVector& AxisI
 
 #include <queue>
 
-TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType)
+TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType, bool bIncludeDiagonals)
 {
 	double StartTime = FPlatformTime::Seconds();
 
@@ -107,7 +107,7 @@ TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal,
 		const float& GScoreCurrent = GScore[Current];
 		const FIntVector CurrentIndices = Nodes.GetAxisIndices(Current);
 
-		GetNeighbours(Current, Neighbours);
+		GetNeighbours(Current, bIncludeDiagonals, Neighbours);
 		for (int32 N : Neighbours)
 		{
 			// Check if 1. we are looking for a specific node type, and 2. this node is of that type
@@ -194,7 +194,7 @@ float APFVolume::Heuristic(const FIntVector& CurrentNodeIndices, const FIntVecto
 	}
 }
 
-void APFVolume::GetNeighbours(int32 NodeIndex, TArray<int32>& Out)
+void APFVolume::GetNeighbours(int32 NodeIndex, bool bIncludeDiagonals, TArray<int32>& Out)
 {
 	Out.Reset();
 
@@ -202,21 +202,27 @@ void APFVolume::GetNeighbours(int32 NodeIndex, TArray<int32>& Out)
 	FIntVector NeighbourIndices = {};
 
 	static constexpr int32 Offsets[26][3] = {
+		// Orthogonal neighbours
+		{ -1,  0,  0 }, {  0, -1,  0 }, {  0,  0, -1 },
+		{  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 },
+
+		// Diagonal neighbours
 		{ -1, -1, -1 }, { -1,  0, -1 }, { -1,  1, -1 },
-		{ -1, -1,  0 },	{ -1,  0,  0 },	{ -1,  1,  0 },
+		{ -1, -1,  0 },					{ -1,  1,  0 },
 		{ -1, -1,  1 },	{ -1,  0,  1 },	{ -1,  1,  1 },
 
-		{  0, -1, -1 }, {  0,  0, -1 }, {  0,  1, -1 },
-		{  0, -1,  0 },	                {  0,  1,  0 },
-		{  0, -1,  1 },	{  0,  0,  1 },	{  0,  1,  1 },
+		{  0, -1, -1 },					{  0,  1, -1 },
+		{  0, -1,  1 },					{  0,  1,  1 },
 
 		{  1, -1, -1 }, {  1,  0, -1 }, {  1,  1, -1 },
-		{  1, -1,  0 },	{  1,  0,  0 },	{  1,  1,  0 },
+		{  1, -1,  0 },					{  1,  1,  0 },
 		{  1, -1,  1 },	{  1,  0,  1 },	{  1,  1,  1 }
 	};
 
-	for (const int32* Offset : Offsets)
+	for (int32 OffsetIndex = 0; OffsetIndex < (bIncludeDiagonals ? 26 : 6); OffsetIndex++)
 	{
+		const int32* Offset = Offsets[OffsetIndex];
+
 		NeighbourIndices = {
 			NodeIndices.X + Offset[0],
 			NodeIndices.Y + Offset[1],
@@ -247,13 +253,48 @@ float APFVolume::MovementCost(const FIntVector& A, const FIntVector& B)
 
 void APFVolume::CheckGridForCollisions()
 {
+	// First pass set all node types
 	for (const auto& [AxisIndices, Value] : Nodes)
 	{
 		const FVector WorldPosition = GetWorldPositionFromAxisIndices(AxisIndices);
 
 		bool bIsOverlapping = GetWorld()->OverlapBlockingTestByChannel(WorldPosition, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeBox(CellSize * 0.5f));
 
-		Nodes[AxisIndices] = (bIsOverlapping ? ENodeType::InsideWall : ENodeType::OpenAir);
+		Nodes[AxisIndices] = (bIsOverlapping ? ENodeType::InCollision : ENodeType::Open);
+	}
+
+	// We then set nodes that are near collision
+	TArray<int32> Neighbours;
+	Neighbours.Reserve(26);
+
+	int32 TotalInOrNearCollision = 0;
+
+	for (int32 NodeIndex = 0; NodeIndex < Nodes.GetNodeCount(); NodeIndex++)
+	{
+		if (Nodes[NodeIndex] == ENodeType::InCollision)
+		{
+			TotalInOrNearCollision++;
+
+			// Set each open neighbour to be near collision,
+			// unfortunately we do need diagonals incase the collision is an outside corner
+			// 
+			// i.e. X is the missed node if it is an outside corner and we skip diagonals
+			// * * * X
+			// - - - *
+			//     | *
+			//     | *
+
+			GetNeighbours(NodeIndex, true, Neighbours);
+
+			for (int32 N : Neighbours)
+			{
+				if (Nodes[N] == ENodeType::Open)
+				{
+					TotalInOrNearCollision++;
+					Nodes[N] = ENodeType::NearCollision;
+				}
+			}
+		}
 	}
 }
 
@@ -277,7 +318,7 @@ void APFVolume::PostEditMove(bool bFinished)
 		if (CellCountsPerAxis != MaxCellCount || Nodes.GetNodeCount() != Nodes.GetRawNodeCount())
 		{
 			CellCountsPerAxis = MaxCellCount;
-			Nodes.Resize(CellCountsPerAxis, ENodeType::OpenAir);
+			Nodes.Resize(CellCountsPerAxis, ENodeType::Open);
 		}
 
 		CheckGridForCollisions();

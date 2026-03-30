@@ -24,8 +24,9 @@ struct FNodeStyleArray
 
     UPROPERTY(EditAnywhere, EditFixedSize, meta=(EditFixedOrder))
     TArray<FNodeStyle> Items = {
-        { ENodeType::OpenAir, FColor::Cyan },
-        { ENodeType::InsideWall, FColor::Red },
+        { ENodeType::Open, FColor::Cyan },
+        { ENodeType::InCollision, FColor::Red },
+        { ENodeType::NearCollision, FColor::Orange }
     };
 };
 
