@@ -4,6 +4,7 @@
 #include "PFVolume.h"
 
 #include "PFVolumeDebugComponent.h"
+#include "Components/ModelComponent.h"
 
 APFVolume::APFVolume()
 {
@@ -294,12 +295,42 @@ float APFVolume::MovementCost(const FIntVector& A, const FIntVector& B) const
 
 void APFVolume::CheckGridForCollisions()
 {
+	TArray<FHitResult> HitArray;
+	FCollisionQueryParams Params;
+
 	// First pass set all node types
 	for (const auto& [AxisIndices, Value] : Nodes)
 	{
 		const FVector WorldPosition = GetWorldPositionFromAxisIndices(AxisIndices);
 
-		bool bIsOverlapping = GetWorld()->OverlapBlockingTestByChannel(WorldPosition, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeBox(CellSize * 0.5f));
+		bool bIsOverlapping = GetWorld()->SweepMultiByChannel(HitArray, WorldPosition, WorldPosition, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeBox(CellSize * 0.5f), Params);
+
+		// Loop over all blocking overlaps
+		if (bIsOverlapping)
+		{
+			for (const FHitResult& Hit : HitArray)
+			{
+				if (Hit.bStartPenetrating)
+				{
+					bool bIsBrush = Hit.Component.IsValid() && Hit.Component->IsA<UModelComponent>();
+
+					if (bIsBrush) // Brushes rely on bStartPenetrating
+					{
+						bIsOverlapping = true;
+						break;
+					}
+					else // Other colliders can reliably check if the point is within the collider
+					{
+						const FVector SurfaceToPoint = WorldPosition - Hit.ImpactPoint;
+						if (FVector::DotProduct(SurfaceToPoint, Hit.ImpactNormal) < 0.f)
+						{
+							bIsOverlapping = true;
+							break;
+						}
+					}
+				}
+			}
+		}
 
 		Nodes[AxisIndices] = (bIsOverlapping ? ENodeType::InCollision : ENodeType::Open);
 	}
