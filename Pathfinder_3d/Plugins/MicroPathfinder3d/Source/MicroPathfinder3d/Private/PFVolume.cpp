@@ -7,9 +7,7 @@
 
 APFVolume::APFVolume()
 {
-#if WITH_EDITORONLY_DATA
     DebugComp = CreateDefaultSubobject<UPFVolumeDebugComponent>(TEXT("PF Volume Debug Component"));
-#endif
 }
 
 const FIntVector APFVolume::GetNearestCellIndices(const FVector& Point) const
@@ -38,6 +36,47 @@ const FIntVector APFVolume::GetNearestCellIndices(const FVector& Point) const
 	return PointRounded;
 }
 
+const FIntVector APFVolume::GetNearestCellIndicesOfType(const FVector& Point, ENodeType NodeType) const
+{
+	FIntVector Out = GetNearestCellIndices(Point);
+
+	if (NodeType != ENodeType::None)
+	{
+		// Find first node of 'NodeType'
+		int32 StartingIndex = Nodes.GetIndex(Out);
+
+		TQueue<int32> IndexesToSearch;
+		IndexesToSearch.Enqueue(StartingIndex);
+
+		TBitArray SearchedIndexes;
+		SearchedIndexes.Init(false, Nodes.GetNodeCount());
+		SearchedIndexes[StartingIndex] = true;
+
+		TArray<int32> Neighbours;
+		Neighbours.Reserve(6); // We only check orthognal neighbours
+
+		int32 CurrentIndex;
+		while (IndexesToSearch.Dequeue(CurrentIndex))
+		{
+			if (Nodes[CurrentIndex] == NodeType)
+				return Nodes.GetAxisIndices(CurrentIndex);
+			
+			GetNeighbours(CurrentIndex, false, Neighbours);
+
+			for (int32 N : Neighbours)
+			{
+				if (!SearchedIndexes[N])
+				{
+					IndexesToSearch.Enqueue(N);
+					SearchedIndexes[N] = true;
+				}
+			}
+		}
+	}
+
+	return Out;
+}
+
 const FVector APFVolume::GetWorldPositionFromAxisIndices(const FIntVector& AxisIndices) const
 {
 	const FVector BoxExtent = GetBounds().BoxExtent;
@@ -48,12 +87,14 @@ const FVector APFVolume::GetWorldPositionFromAxisIndices(const FIntVector& AxisI
 
 #include <queue>
 
-TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType, bool bIncludeDiagonals)
+TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType, bool bIncludeDiagonals) const
 {
 	double StartTime = FPlatformTime::Seconds();
 
-	const FIntVector StartIndices = GetNearestCellIndices(Start);
-	const FIntVector GoalIndices = GetNearestCellIndices(Goal);
+	/*const FIntVector StartIndices = GetNearestCellIndices(Start);
+	const FIntVector GoalIndices = GetNearestCellIndices(Goal);*/
+	const FIntVector StartIndices = GetNearestCellIndicesOfType(Start, NodeType);
+	const FIntVector GoalIndices = GetNearestCellIndicesOfType(Goal, NodeType);
 	const int32 StartIndex = Nodes.GetIndex(StartIndices);
 	const int32 GoalIndex = Nodes.GetIndex(GoalIndices);
 	const int32 NodeCount = Nodes.GetNodeCount();
@@ -89,7 +130,7 @@ TArray<FVector> APFVolume::FindPathTo(const FVector& Start, const FVector& Goal,
 	OpenSet.push(StartIndex);
 
 	TArray<int32> Neighbours = {};
-	Neighbours.Reserve(26);
+	Neighbours.Reserve(bIncludeDiagonals ? 26 : 6);
 
 	// On the off chance that the proceeding while loop instantly exits
 	// we store this outside it to reconstruct the path afterwards
@@ -194,7 +235,7 @@ float APFVolume::Heuristic(const FIntVector& CurrentNodeIndices, const FIntVecto
 	}
 }
 
-void APFVolume::GetNeighbours(int32 NodeIndex, bool bIncludeDiagonals, TArray<int32>& Out)
+void APFVolume::GetNeighbours(int32 NodeIndex, bool bIncludeDiagonals, TArray<int32>& Out) const
 {
 	Out.Reset();
 
@@ -238,7 +279,7 @@ void APFVolume::GetNeighbours(int32 NodeIndex, bool bIncludeDiagonals, TArray<in
 	}
 }
 
-float APFVolume::MovementCost(const FIntVector& A, const FIntVector& B)
+float APFVolume::MovementCost(const FIntVector& A, const FIntVector& B) const
 {
 	const int dx = FMath::Abs(A.X - B.X);
 	const int dy = FMath::Abs(A.Y - B.Y);
@@ -267,14 +308,10 @@ void APFVolume::CheckGridForCollisions()
 	TArray<int32> Neighbours;
 	Neighbours.Reserve(26);
 
-	int32 TotalInOrNearCollision = 0;
-
 	for (int32 NodeIndex = 0; NodeIndex < Nodes.GetNodeCount(); NodeIndex++)
 	{
 		if (Nodes[NodeIndex] == ENodeType::InCollision)
 		{
-			TotalInOrNearCollision++;
-
 			// Set each open neighbour to be near collision,
 			// unfortunately we do need diagonals incase the collision is an outside corner
 			// 
@@ -290,7 +327,6 @@ void APFVolume::CheckGridForCollisions()
 			{
 				if (Nodes[N] == ENodeType::Open)
 				{
-					TotalInOrNearCollision++;
 					Nodes[N] = ENodeType::NearCollision;
 				}
 			}

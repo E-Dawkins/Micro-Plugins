@@ -49,17 +49,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "PF Volume")
 	const FIntVector GetNearestCellIndices(const FVector& Point) const;
 
+	UFUNCTION(BlueprintPure, Category = "PF Volume")
+	const FIntVector GetNearestCellIndicesOfType(const FVector& Point, ENodeType NodeType) const;
+
 	// Returns world position from axis indices
 	UFUNCTION(BlueprintPure, Category = "PF Volume")
 	const FVector GetWorldPositionFromAxisIndices(const FIntVector& AxisIndices) const;
 
 	UFUNCTION(BlueprintCallable, Category = "PF Volume", meta = (AdvancedDisplay = "NodeType,bIncludeDiagonals"))
-	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType = ENodeType::None, bool bIncludeDiagonals = true);
+	TArray<FVector> FindPathTo(const FVector& Start, const FVector& Goal, ENodeType NodeType = ENodeType::None, bool bIncludeDiagonals = true) const;
 
 private:
 	FORCEINLINE float Heuristic(const FIntVector& CurrentNodeIndices, const FIntVector& GoalIndices) const;
-	void GetNeighbours(int32 NodeIndex, bool bIncludeDiagonals, TArray<int32>& Out);
-	float MovementCost(const FIntVector& A, const FIntVector& B);
+	void GetNeighbours(int32 NodeIndex, bool bIncludeDiagonals, TArray<int32>& Out) const;
+	float MovementCost(const FIntVector& A, const FIntVector& B) const;
 
 	void CheckGridForCollisions();
 
